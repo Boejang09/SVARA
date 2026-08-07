@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
 import 'package:svara_app/features/notifications/notifications_screen.dart';
-import 'package:svara_app/widgets/development_notice.dart';
 import 'package:svara_app/widgets/skeleton/skeleton.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -109,9 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          const SizedBox(height: 4),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 28),
                           Row(
                             children: [
                               Expanded(
@@ -187,11 +184,134 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const DevelopmentNotice(icon: Icons.person_search_rounded),
+                    _buildSettingsGroup(
+                      title: 'Pengaturan Akun',
+                      items: const [
+                        _SettingItem(
+                          icon: Icons.person_outline_rounded,
+                          title: 'Informasi Pribadi',
+                        ),
+                        _SettingItem(
+                          icon: Icons.history_rounded,
+                          title: 'Riwayat Medis',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSettingsGroup(
+                      title: 'Preferensi & Keamanan',
+                      items: const [
+                        _SettingItem(
+                          icon: Icons.language_rounded,
+                          title: 'Bahasa',
+                          subtitle: 'Indonesia',
+                        ),
+                        _SettingItem(
+                          icon: Icons.shield_outlined,
+                          title: 'Privasi',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSettingsGroup(
+                      title: 'Dukungan',
+                      items: const [
+                        _SettingItem(
+                          icon: Icons.help_outline_rounded,
+                          title: 'Pusat Bantuan',
+                        ),
+                        _SettingItem(
+                          icon: Icons.info_outline_rounded,
+                          title: 'Tentang SVARA',
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),
               ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsGroup({
+    required String title,
+    required List<_SettingItem> items,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              color: AppTheme.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...items,
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+
+  const _SettingItem({required this.icon, required this.title, this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryLightTeal,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: AppTheme.primaryDarkTeal, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppTheme.textDark,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (subtitle != null)
+                  Text(
+                    subtitle!,
+                    style: const TextStyle(
+                      color: AppTheme.textMuted,
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+        ],
       ),
     );
   }

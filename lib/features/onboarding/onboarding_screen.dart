@@ -20,8 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<OnboardingItem> _items = const [
     OnboardingItem(
       title: 'Deteksi Dini\nKesehatan Jantung',
-      subtitle:
-          'Pantau kesehatan jantung Anda\nhanya menggunakan smartphone.',
+      subtitle: 'Pantau kesehatan jantung Anda\nhanya menggunakan smartphone.',
       icon: Icons.monitor_heart_rounded,
       badgeText: 'Analisis AI',
     ),

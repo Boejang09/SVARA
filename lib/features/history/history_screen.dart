@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/mock/screening_record.dart';
+import 'package:svara_app/core/mock/screening_store.dart';
 import 'package:svara_app/core/router/app_routes.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/widgets/development_notice.dart';
 import 'package:svara_app/widgets/skeleton/skeleton.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -75,11 +76,171 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const DevelopmentNotice(icon: Icons.storage_rounded),
+                    ValueListenableBuilder<List<ScreeningRecord>>(
+                      valueListenable: ScreeningStore.records,
+                      builder: (context, records, _) {
+                        return Column(
+                          children: records
+                              .map(
+                                (record) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _HistoryRecordCard(record: record),
+                                ),
+                              )
+                              .toList(),
+                        );
+                      },
+                    ),
                     const SizedBox(height: 24),
                   ],
                 ),
               ),
+      ),
+    );
+  }
+}
+
+class _HistoryRecordCard extends StatelessWidget {
+  final ScreeningRecord record;
+
+  const _HistoryRecordCard({required this.record});
+
+  @override
+  Widget build(BuildContext context) {
+    final riskColor = record.isLowRisk
+        ? AppTheme.primaryTeal
+        : AppTheme.statusWarning;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  record.formattedDate,
+                  style: const TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: riskColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  record.riskLevel,
+                  style: TextStyle(
+                    color: record.isLowRisk
+                        ? AppTheme.primaryDarkTeal
+                        : Colors.orange.shade900,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            record.title,
+            style: const TextStyle(
+              color: AppTheme.textDark,
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _MetricMini(
+                  icon: Icons.favorite_border_rounded,
+                  label: 'Jantung',
+                  value: record.heartStatus,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MetricMini(
+                  icon: Icons.air_rounded,
+                  label: '',
+                  value: record.isLowRisk ? 'Optimal' : 'Normal',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            record.idText,
+            style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricMini extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _MetricMini({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.bgMint,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppTheme.primaryDarkTeal, size: 16),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: AppTheme.primaryDarkTeal,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppTheme.textDark,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

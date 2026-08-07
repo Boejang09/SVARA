@@ -96,7 +96,6 @@ class _RecordAudioScreenState extends State<RecordAudioScreen>
                   style: TextStyle(fontSize: 13, color: AppTheme.textMuted),
                 ),
                 const SizedBox(height: 20),
-
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,

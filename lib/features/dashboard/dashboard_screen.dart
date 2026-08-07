@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
 import 'package:svara_app/features/notifications/notifications_screen.dart';
-import 'package:svara_app/widgets/development_notice.dart';
 import 'package:svara_app/widgets/skeleton/skeleton.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -138,11 +137,239 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const DevelopmentNotice(),
+                  const _DashboardMockContent(),
                   const SizedBox(height: 24),
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _DashboardMockContent extends StatelessWidget {
+  const _DashboardMockContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionTitle('Ringkasan Kesehatan'),
+        const SizedBox(height: 12),
+        Row(
+          children: const [
+            Expanded(
+              child: _SummaryCard(
+                icon: Icons.favorite_border_rounded,
+                title: 'Status Jantung',
+                value: 'Normal',
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: _SummaryCard(
+                icon: Icons.air_rounded,
+                title: 'Status',
+                value: 'Optimal',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 92,
+                height: 92,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 92,
+                      height: 92,
+                      child: CircularProgressIndicator(
+                        value: 0.85,
+                        strokeWidth: 8,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppTheme.primaryTeal,
+                        ),
+                        backgroundColor: AppTheme.primaryLightTeal,
+                      ),
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Text(
+                          '85',
+                          style: TextStyle(
+                            color: AppTheme.primaryDarkTeal,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '/100',
+                          style: TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 18),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Skor Risiko',
+                      style: TextStyle(
+                        color: AppTheme.textDark,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Risiko rendah berdasarkan data screening contoh.',
+                      style: TextStyle(
+                        color: AppTheme.textMuted,
+                        fontSize: 13,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        _sectionTitle('Skrining Terbaru'),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Row(
+            children: [
+              _IconBadge(icon: Icons.mic_rounded),
+              SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pemeriksaan Vitalitas',
+                      style: TextStyle(
+                        color: AppTheme.textDark,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      '24 Okt 2023 • 09:15',
+                      style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                'Optimal',
+                style: TextStyle(
+                  color: AppTheme.primaryDarkTeal,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        color: AppTheme.textDark,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+
+  const _SummaryCard({
+    required this.icon,
+    required this.title,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _IconBadge(icon: icon),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              color: AppTheme.textDark,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconBadge extends StatelessWidget {
+  final IconData icon;
+
+  const _IconBadge({required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: AppTheme.primaryLightTeal,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(icon, color: AppTheme.primaryDarkTeal, size: 22),
     );
   }
 }

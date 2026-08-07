@@ -44,8 +44,6 @@ class BeforeRecordingScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Visual Placement Container
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -71,8 +69,6 @@ class BeforeRecordingScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Checklist Tiles
               _buildStepTile(
                 icon: Icons.chair_rounded,
                 title: 'Duduk dengan nyaman',
@@ -97,8 +93,6 @@ class BeforeRecordingScreen extends StatelessWidget {
                 desc: 'Letakkan ponsel tepat seperti gambar di atas.',
               ),
               const SizedBox(height: 24),
-
-              // Start Recording Button
               SizedBox(
                 width: double.infinity,
                 height: 56,

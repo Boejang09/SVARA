@@ -44,8 +44,6 @@ class AboutSvaraScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Card: Our Mission
               _buildInfoCard(
                 icon: Icons.rocket_launch_outlined,
                 title: 'Misi Kami',
@@ -53,8 +51,6 @@ class AboutSvaraScreen extends StatelessWidget {
                     'Menyediakan skrining kesehatan jantung yang mudah diakses dan non-invasif ke seluruh penjuru dunia menggunakan kekuatan suara dan kecerdasan buatan. Kami bertujuan memberdayakan individu dengan wawasan dini tentang kesehatan jantung mereka, sehingga memungkinkan intervensi medis yang proaktif.',
               ),
               const SizedBox(height: 16),
-
-              // Card: Our Vision
               _buildInfoCard(
                 icon: Icons.remove_red_eye_outlined,
                 title: 'Visi Kami',
@@ -62,17 +58,15 @@ class AboutSvaraScreen extends StatelessWidget {
                     'Dunia di mana kondisi jantung terdeteksi jauh sebelum gejala menjadi serius. SVARA membayangkan masa depan di mana smartphone Anda berfungsi sebagai pendamping klinis yang canggih, menjembatani kesenjangan antara kehidupan sehari-hari dan perawatan medis profesional.',
               ),
               const SizedBox(height: 28),
-
-              // How SVARA Works Section
-              Row(
+              const Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.lightbulb_outline_rounded,
                     color: AppTheme.primaryTeal,
                     size: 22,
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
+                  SizedBox(width: 8),
+                  Text(
                     'Cara Kerja SVARA',
                     style: TextStyle(
                       fontSize: 20,
@@ -83,7 +77,6 @@ class AboutSvaraScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-
               _buildStepCard(
                 stepNum: '01',
                 stepTitle: 'REKAM',
@@ -108,8 +101,6 @@ class AboutSvaraScreen extends StatelessWidget {
                 icon: Icons.assessment_outlined,
               ),
               const SizedBox(height: 28),
-
-              // Banner: Driven by Science
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
@@ -141,8 +132,6 @@ class AboutSvaraScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 28),
-
-              // Mandatory Disclaimer
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(

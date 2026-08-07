@@ -53,8 +53,6 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             children: [
-
-
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -70,7 +68,6 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                       ),
                     ),
                   ),
-
                   const Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -82,7 +79,6 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                           color: AppTheme.textDark,
                         ),
                       ),
-
                       Text(
                         'Risiko Rendah',
                         style: TextStyle(
@@ -95,9 +91,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Skrining Selesai - Pratinjau',
                 style: TextStyle(
@@ -106,9 +100,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                   color: AppTheme.textDark,
                 ),
               ),
-
               const SizedBox(height: 6),
-
               const Text(
                 'Hasil ini menggunakan data contoh untuk mendemokan alur MVP sampai model ML tersedia.',
                 textAlign: TextAlign.center,
@@ -118,41 +110,32 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                   height: 1.35,
                 ),
               ),
-
               const SizedBox(height: 24),
-
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                 ),
-
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                   children: [
                     Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(10),
-
                           decoration: BoxDecoration(
                             color: AppTheme.primaryLightTeal,
                             borderRadius: BorderRadius.circular(14),
                           ),
-
                           child: const Icon(
                             Icons.settings_suggest_rounded,
                             color: AppTheme.primaryTeal,
                           ),
                         ),
-
                         const SizedBox(width: 14),
-
                         const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-
                           children: [
                             Text(
                               'Kepercayaan AI',
@@ -161,7 +144,6 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                                 color: AppTheme.textMuted,
                               ),
                             ),
-
                             Text(
                               'Contoh Skor Risiko',
                               style: TextStyle(
@@ -174,18 +156,15 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                         ),
                       ],
                     ),
-
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 4,
                       ),
-
                       decoration: BoxDecoration(
                         color: AppTheme.primaryTeal,
                         borderRadius: BorderRadius.circular(14),
                       ),
-
                       child: const Text(
                         'Preview',
                         style: TextStyle(
@@ -198,9 +177,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 12),
-
               _buildMetricCard(
                 icon: Icons.favorite_rounded,
                 iconColor: Colors.redAccent,
@@ -209,9 +186,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                 subText: '72 BPM Rata-rata',
                 progress: 0.75,
               ),
-
               const SizedBox(height: 20),
-              // Clinical Recommendations
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -219,14 +194,11 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                 ),
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
                   children: [
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                       children: [
                         Text(
                           'Rekomendasi Klinis',
@@ -236,7 +208,6 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                             color: AppTheme.textDark,
                           ),
                         ),
-
                         Icon(
                           Icons.thumb_up_alt_outlined,
                           size: 18,
@@ -244,17 +215,13 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 14),
-
                     _buildRecommendationItem(
                       title: 'Lanjutkan pemantauan rutin',
                       desc:
                           'Kondisi jantung Anda stabil. Skrining berikutnya disarankan dalam 7 hari.',
                     ),
-
                     const SizedBox(height: 12),
-
                     _buildRecommendationItem(
                       title: 'Optimasi Hidrasi',
                       desc:
@@ -263,106 +230,73 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // Save Result Button
               SizedBox(
                 width: double.infinity,
                 height: 54,
-
                 child: ElevatedButton(
                   onPressed: _saveAndGoHome,
-
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryDarkTeal,
-
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(27),
                     ),
                   ),
-
                   child: const Text(
                     'Simpan Sementara',
-
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
-
               const SizedBox(height: 12),
-
-              // Bottom Buttons
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => AppRouter.finishScreeningToHome(context),
-
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.grey.shade200,
-
                         side: BorderSide.none,
-
                         padding: const EdgeInsets.symmetric(vertical: 14),
-
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-
                       icon: const Icon(
                         Icons.home_rounded,
-
                         color: AppTheme.textDark,
-
                         size: 18,
                       ),
-
                       label: const Text(
                         'Beranda',
-
                         style: TextStyle(
                           color: AppTheme.textDark,
-
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 12),
-
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: _saveAndGoHistory,
-
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.grey.shade200,
-
                         side: BorderSide.none,
-
                         padding: const EdgeInsets.symmetric(vertical: 14),
-
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-
                       icon: const Icon(
                         Icons.history_rounded,
-
                         color: AppTheme.textDark,
-
                         size: 18,
                       ),
-
                       label: const Text(
                         'Riwayat',
-
                         style: TextStyle(
                           color: AppTheme.textDark,
-
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -370,7 +304,6 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
             ],
           ),
@@ -389,32 +322,24 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.all(18),
-
       decoration: BoxDecoration(
         color: Colors.white,
-
         borderRadius: BorderRadius.circular(20),
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
           Row(
             children: [
               Icon(icon, color: iconColor, size: 20),
-
               const SizedBox(width: 8),
-
               Text(
                 title,
                 style: const TextStyle(fontSize: 14, color: AppTheme.textMuted),
               ),
             ],
           ),
-
           const SizedBox(height: 8),
-
           Row(
             children: [
               Text(
@@ -425,28 +350,20 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                   color: AppTheme.textDark,
                 ),
               ),
-
               const SizedBox(width: 10),
-
               Text(
                 subText,
                 style: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
               ),
             ],
           ),
-
           const SizedBox(height: 10),
-
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
-
             child: LinearProgressIndicator(
               value: progress,
-
               minHeight: 6,
-
               backgroundColor: Colors.grey.shade100,
-
               valueColor: const AlwaysStoppedAnimation<Color>(
                 AppTheme.primaryTeal,
               ),
@@ -463,54 +380,37 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
-
       decoration: BoxDecoration(
         color: AppTheme.bgMint,
-
         borderRadius: BorderRadius.circular(16),
       ),
-
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-
         children: [
           const Icon(
             Icons.check_circle_rounded,
-
             color: AppTheme.primaryTeal,
-
             size: 20,
           ),
-
           const SizedBox(width: 10),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-
               children: [
                 Text(
                   title,
-
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-
                     fontSize: 14,
-
                     color: AppTheme.textDark,
                   ),
                 ),
-
                 const SizedBox(height: 2),
-
                 Text(
                   desc,
-
                   style: const TextStyle(
                     fontSize: 12.5,
-
                     color: AppTheme.textMuted,
-
                     height: 1.3,
                   ),
                 ),

@@ -71,8 +71,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     'Registrasi akun membutuhkan backend user dan database. Untuk MVP saat ini gunakan mode Guest dari halaman login.',
               ),
               const SizedBox(height: 18),
-
-              // Form fields
               _buildLabel('Nama Lengkap'),
               const TextField(
                 decoration: InputDecoration(
@@ -84,7 +82,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
               _buildLabel('Email'),
               const TextField(
                 keyboardType: TextInputType.emailAddress,
@@ -97,7 +94,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
               _buildLabel('Nomor Telepon'),
               const TextField(
                 keyboardType: TextInputType.phone,
@@ -110,7 +106,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
               _buildLabel('Kata Sandi'),
               TextField(
                 obscureText: _obscurePass,
@@ -133,7 +128,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
               _buildLabel('Konfirmasi Kata Sandi'),
               TextField(
                 obscureText: _obscureConfirm,
@@ -156,8 +150,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-
-              // TOS Checkbox
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -202,8 +194,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-
-              // Submit Button
               SizedBox(
                 width: double.infinity,
                 height: 54,
@@ -222,8 +212,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Log In Footer
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

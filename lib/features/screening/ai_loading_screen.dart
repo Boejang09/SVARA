@@ -68,7 +68,6 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
           child: Column(
             children: [
               const Spacer(),
-              // AI Ripple Radar Visualizer
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -104,7 +103,6 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                       ),
                     ),
                   ),
-                  // Badges
                   Positioned(
                     top: 10,
                     right: 0,
@@ -116,12 +114,14 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                   Positioned(
                     bottom: 20,
                     left: 0,
-                    child: _buildBadge(Icons.monitor_heart_rounded, 'Detak Jantung'),
+                    child: _buildBadge(
+                      Icons.monitor_heart_rounded,
+                      'Detak Jantung',
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 36),
-
               const Text(
                 'Menyiapkan hasil\nscreening contoh...',
                 textAlign: TextAlign.center,
@@ -143,104 +143,20 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                 ),
               ),
               const Spacer(),
-
-              // Cards: MVP status
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryLightTeal,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_circle_outline_rounded,
-                        color: AppTheme.primaryTeal,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Mode Simulasi MVP',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: AppTheme.textDark,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Belum terhubung ke model ML atau backend prediksi.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppTheme.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              _buildInfoTile(
+                icon: Icons.check_circle_outline_rounded,
+                title: 'Mode Simulasi MVP',
+                desc: 'Belum terhubung ke model ML atau backend prediksi.',
+                color: AppTheme.primaryTeal,
               ),
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.indigo.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.security_rounded,
-                        color: Colors.indigo.shade600,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Data Lokal Sementara',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: AppTheme.textDark,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Penyimpanan cloud/database belum aktif di MVP frontend.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppTheme.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              _buildInfoTile(
+                icon: Icons.security_rounded,
+                title: 'Data Lokal Sementara',
+                desc: 'Penyimpanan cloud/database belum aktif di MVP frontend.',
+                color: Colors.indigo,
               ),
               const SizedBox(height: 24),
-
-              // Progress percentage
               Text(
                 '$_progressPercent%',
                 style: const TextStyle(
@@ -253,6 +169,57 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoTile({
+    required IconData icon,
+    required String title,
+    required String desc,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: AppTheme.textDark,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  desc,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
