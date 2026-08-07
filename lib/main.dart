@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/router/app_router.dart';
+import 'package:svara_app/core/router/app_routes.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/features/onboarding/onboarding_screen.dart';
 
 void main() {
   runApp(const SvaraApp());
@@ -15,7 +16,8 @@ class SvaraApp extends StatelessWidget {
       title: 'SVARA',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const OnboardingScreen(),
+      initialRoute: AppRoutes.onboarding,
+      onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
 }

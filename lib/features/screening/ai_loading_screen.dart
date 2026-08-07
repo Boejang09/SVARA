@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/features/screening/screening_result_screen.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
 class AILoadingScreen extends StatefulWidget {
@@ -12,7 +12,7 @@ class AILoadingScreen extends StatefulWidget {
 }
 
 class _AILoadingScreenState extends State<AILoadingScreen> {
-  int _progressPercent = 11;
+  int _progressPercent = 0;
   Timer? _progressTimer;
 
   @override
@@ -38,11 +38,7 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
 
   void _navigateToResults() {
     Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const ScreeningResultScreen()),
-        );
-      }
+      if (mounted) AppRouter.toScreeningResult(context);
     });
   }
 
@@ -62,7 +58,7 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.close_rounded, color: AppTheme.textDark),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => AppRouter.finishScreeningToHome(context),
           ),
         ],
       ),
@@ -112,19 +108,22 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                   Positioned(
                     top: 10,
                     right: 0,
-                    child: _buildBadge(Icons.favorite_outline_rounded, 'BPM: Analysis'),
+                    child: _buildBadge(
+                      Icons.favorite_outline_rounded,
+                      'BPM: Analisis',
+                    ),
                   ),
                   Positioned(
                     bottom: 20,
                     left: 0,
-                    child: _buildBadge(Icons.air_rounded, 'Respiratory Flow'),
+                    child: _buildBadge(Icons.monitor_heart_rounded, 'Detak Jantung'),
                   ),
                 ],
               ),
               const SizedBox(height: 36),
 
               const Text(
-                'Analyzing your\ncardiopulmonary sounds...',
+                'Menyiapkan hasil\nscreening contoh...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24,
@@ -135,7 +134,7 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'SVARA AI is identifying acoustic patterns to\nensure clinical-grade precision for your\nreport.',
+                'Flow ini mengikuti roadmap Record Audio ke AI ke Risk Score, tetapi analisis ML belum berjalan.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -145,7 +144,7 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
               ),
               const Spacer(),
 
-              // Cards: Accuracy & Encryption
+              // Cards: MVP status
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -160,7 +159,10 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                         color: AppTheme.primaryLightTeal,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.check_circle_outline_rounded, color: AppTheme.primaryTeal),
+                      child: const Icon(
+                        Icons.check_circle_outline_rounded,
+                        color: AppTheme.primaryTeal,
+                      ),
                     ),
                     const SizedBox(width: 14),
                     const Expanded(
@@ -168,13 +170,20 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '99.2% Accuracy',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.textDark),
+                            'Mode Simulasi MVP',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: AppTheme.textDark,
+                            ),
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'Validated against gold-standard clinical echocardiograms.',
-                            style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                            'Belum terhubung ke model ML atau backend prediksi.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textMuted,
+                            ),
                           ),
                         ],
                       ),
@@ -197,7 +206,10 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                         color: Colors.indigo.shade50,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.security_rounded, color: Colors.indigo.shade600),
+                      child: Icon(
+                        Icons.security_rounded,
+                        color: Colors.indigo.shade600,
+                      ),
                     ),
                     const SizedBox(width: 14),
                     const Expanded(
@@ -205,13 +217,20 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Encrypted Flow',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.textDark),
+                            'Data Lokal Sementara',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: AppTheme.textDark,
+                            ),
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'HIPAA-compliant data processing and secure storage.',
-                            style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                            'Penyimpanan cloud/database belum aktif di MVP frontend.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textMuted,
+                            ),
                           ),
                         ],
                       ),

@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/features/auth/login_screen.dart';
 import 'package:svara_app/widgets/mobile_wrapper.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -19,22 +19,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingItem> _items = const [
     OnboardingItem(
-      title: 'Early Heart & Lung\nScreening',
-      subtitle: 'Monitor your cardiopulmonary health\nusing only your smartphone.',
+      title: 'Deteksi Dini\nKesehatan Jantung',
+      subtitle:
+          'Pantau kesehatan jantung Anda\nhanya menggunakan smartphone.',
       icon: Icons.monitor_heart_rounded,
-      badgeText: 'AI Analysis',
+      badgeText: 'Analisis AI',
     ),
     OnboardingItem(
-      title: 'Record Heart & Lung\nSounds',
-      subtitle: 'Place your smartphone on the\nrecommended body position and record\nyour heart or breathing sounds.',
+      title: 'Rekam Suara\nJantung Anda',
+      subtitle:
+          'Tempelkan smartphone di posisi tubuh\nyang disarankan dan rekam\nsuara jantung Anda.',
       icon: Icons.graphic_eq_rounded,
-      badgeText: 'Capturing',
+      badgeText: 'Merekam',
     ),
     OnboardingItem(
-      title: 'AI Risk Assessment',
-      subtitle: 'Receive an AI-generated\ncardiopulmonary risk assessment and\npersonalized health recommendations.',
+      title: 'Penilaian Risiko AI',
+      subtitle:
+          'Dapatkan penilaian risiko jantung\nberbasis AI dan rekomendasi\nkesehatan yang dipersonalisasi.',
       icon: Icons.analytics_rounded,
-      badgeText: 'Low-Normal',
+      badgeText: 'Risiko Rendah',
     ),
   ];
 
@@ -50,9 +53,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+    AppRouter.toLogin(context);
   }
 
   @override
@@ -64,7 +65,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -72,7 +76,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     TextButton(
                       onPressed: _navigateToLogin,
                       child: const Text(
-                        'Skip',
+                        'Lewati',
                         style: TextStyle(
                           color: AppTheme.textMuted,
                           fontSize: 15,
@@ -86,16 +90,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
-                  onPageChanged: (index) => setState(() => _currentPage = index),
+                  onPageChanged: (index) =>
+                      setState(() => _currentPage = index),
                   itemCount: _items.length,
                   itemBuilder: (context, index) {
                     final item = _items[index];
                     return LayoutBuilder(
                       builder: (context, constraints) {
                         return SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 8,
+                          ),
                           child: ConstrainedBox(
-                            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight,
+                            ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -131,7 +141,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 child: Column(
                   children: [
                     Row(
@@ -168,7 +181,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              _currentPage == _items.length - 1 ? 'Get Started' : 'Next',
+                              _currentPage == _items.length - 1
+                                  ? 'Mulai Sekarang'
+                                  : 'Selanjutnya',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -176,7 +191,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                            const Icon(
+                              Icons.arrow_forward_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ],
                         ),
                       ),
@@ -236,7 +255,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Positioned(
               bottom: 28,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),

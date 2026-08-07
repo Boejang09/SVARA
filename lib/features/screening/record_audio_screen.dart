@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/features/screening/ai_loading_screen.dart';
 import 'package:svara_app/widgets/mobile_wrapper.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -13,11 +13,14 @@ class RecordAudioScreen extends StatefulWidget {
   State<RecordAudioScreen> createState() => _RecordAudioScreenState();
 }
 
-class _RecordAudioScreenState extends State<RecordAudioScreen> with SingleTickerProviderStateMixin {
+class _RecordAudioScreenState extends State<RecordAudioScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   Timer? _timer;
-  int _secondsElapsed = 14;
+  Timer? _waveformTimer;
+  int _secondsElapsed = 0;
   final Random _random = Random();
+  final List<double> _waveformHeights = List.generate(30, (_) => 20.0);
 
   @override
   void initState() {
@@ -27,10 +30,16 @@ class _RecordAudioScreenState extends State<RecordAudioScreen> with SingleTicker
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _secondsElapsed++);
+    });
+
+    _waveformTimer = Timer.periodic(const Duration(milliseconds: 120), (_) {
       if (mounted) {
         setState(() {
-          _secondsElapsed++;
+          for (var i = 0; i < _waveformHeights.length; i++) {
+            _waveformHeights[i] = 10.0 + _random.nextDouble() * 40.0;
+          }
         });
       }
     });
@@ -40,25 +49,28 @@ class _RecordAudioScreenState extends State<RecordAudioScreen> with SingleTicker
   void dispose() {
     _pulseController.dispose();
     _timer?.cancel();
+    _waveformTimer?.cancel();
     super.dispose();
   }
 
   void _finishRecording() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const AILoadingScreen()),
-    );
+    AppRouter.toAiAnalysis(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final String timerText = '00:${_secondsElapsed.toString().padLeft(2, '0')}';
+    final timerText =
+        '${(_secondsElapsed ~/ 60).toString().padLeft(2, '0')}:${(_secondsElapsed % 60).toString().padLeft(2, '0')}';
 
     return MobileWrapper(
       child: Scaffold(
         backgroundColor: AppTheme.bgMint,
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.primaryDarkTeal),
+            icon: const Icon(
+              Icons.arrow_back_rounded,
+              color: AppTheme.primaryDarkTeal,
+            ),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: const SvaraWordmark(markSize: 32, fontSize: 20),
@@ -70,7 +82,7 @@ class _RecordAudioScreenState extends State<RecordAudioScreen> with SingleTicker
               children: [
                 const SizedBox(height: 8),
                 const Text(
-                  'Recording heart and lung sounds...',
+                  'Simulasi rekam audio...',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20,
@@ -80,17 +92,16 @@ class _RecordAudioScreenState extends State<RecordAudioScreen> with SingleTicker
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Keep the device steady against your chest',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.textMuted,
-                  ),
+                  'Audio asli belum diproses karena API AI belum tersedia',
+                  style: TextStyle(fontSize: 13, color: AppTheme.textMuted),
                 ),
                 const SizedBox(height: 20),
 
-                // Timer Pill
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryLightTeal,
                     borderRadius: BorderRadius.circular(20),
@@ -106,8 +117,6 @@ class _RecordAudioScreenState extends State<RecordAudioScreen> with SingleTicker
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Center Pulsing Animation Ring
                 AnimatedBuilder(
                   animation: _pulseController,
                   builder: (context, child) {
@@ -140,7 +149,11 @@ class _RecordAudioScreenState extends State<RecordAudioScreen> with SingleTicker
                                 child: const Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.mic_rounded, color: Colors.white, size: 30),
+                                    Icon(
+                                      Icons.mic_rounded,
+                                      color: Colors.white,
+                                      size: 30,
+                                    ),
                                     SizedBox(height: 2),
                                     Text(
                                       'REC',
@@ -162,18 +175,16 @@ class _RecordAudioScreenState extends State<RecordAudioScreen> with SingleTicker
                   },
                 ),
                 const SizedBox(height: 28),
-
-                // Audio Waveform Visualizer
                 SizedBox(
                   height: 50,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: List.generate(30, (index) {
-                      final h = 10.0 + _random.nextDouble() * 40.0;
-                      return Container(
+                    children: List.generate(_waveformHeights.length, (index) {
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 100),
                         width: 3.5,
-                        height: h,
+                        height: _waveformHeights[index],
                         decoration: BoxDecoration(
                           color: AppTheme.primaryTeal.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(2),
@@ -183,8 +194,6 @@ class _RecordAudioScreenState extends State<RecordAudioScreen> with SingleTicker
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Finish Recording Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -197,17 +206,19 @@ class _RecordAudioScreenState extends State<RecordAudioScreen> with SingleTicker
                       ),
                     ),
                     child: const Text(
-                      'Finish Recording',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      'Selesai Rekaman',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
-
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text(
-                    'Cancel',
+                    'Batal',
                     style: TextStyle(
                       color: AppTheme.textMuted,
                       fontSize: 14,

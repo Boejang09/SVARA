@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/features/auth/register_screen.dart';
-import 'package:svara_app/features/dashboard/main_navigation_screen.dart';
+import 'package:svara_app/widgets/development_notice.dart';
 import 'package:svara_app/widgets/mobile_wrapper.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -13,20 +13,26 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController(text: 'guest');
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _login() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
+  void _loginAsGuest() {
+    AppRouter.toMain(context);
+  }
+
+  void _showAuthDevelopmentMessage() {
+    showDevelopmentSnack(
+      context,
+      message:
+          'Sedang dalam tahap pengembangan. Backend user belum tersedia, jadi MVP memakai mode Guest.',
     );
   }
 
@@ -44,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SvaraLogo(
                   size: 72,
                   showText: true,
-                  tagline: 'Clinical Precision. Pulmonary Clarity.',
+                  tagline: 'Presisi Klinis. Kejernihan Jantung.',
                 ),
                 const SizedBox(height: 36),
                 Container(
@@ -64,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Email Address',
+                        'Username',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textDark,
@@ -73,11 +79,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       TextField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
+                        controller: _usernameController,
+                        textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
-                          hintText: 'name@hospital.com',
-                          prefixIcon: Icon(Icons.email_outlined, color: AppTheme.textMuted),
+                          hintText: 'guest',
+                          prefixIcon: Icon(
+                            Icons.person_outline_rounded,
+                            color: AppTheme.textMuted,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -93,9 +102,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: _showAuthDevelopmentMessage,
                             child: const Text(
-                              'Forgot Password',
+                              'Lupa Password',
                               style: TextStyle(
                                 color: AppTheme.primaryDarkTeal,
                                 fontSize: 13,
@@ -109,9 +118,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
                           hintText: '********',
-                          prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.textMuted),
+                          prefixIcon: const Icon(
+                            Icons.lock_outline,
+                            color: AppTheme.textMuted,
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
@@ -128,19 +141,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 28),
+                      const DevelopmentNotice(
+                        message:
+                            'Login username dan password mengikuti roadmap. Karena backend belum ada, akses MVP sementara menggunakan akun Guest.',
+                      ),
+                      const SizedBox(height: 18),
                       SizedBox(
                         width: double.infinity,
                         height: 54,
                         child: ElevatedButton(
-                          onPressed: _login,
+                          onPressed: _showAuthDevelopmentMessage,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryTeal,
+                            backgroundColor: Colors.grey,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(27),
                             ),
                           ),
                           child: const Text(
-                            'Login',
+                            'Login dengan Username',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -171,9 +189,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: double.infinity,
                         height: 52,
                         child: OutlinedButton(
-                          onPressed: _login,
+                          onPressed: _loginAsGuest,
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: Colors.grey.shade100,
+                            backgroundColor: AppTheme.primaryTeal,
                             side: BorderSide.none,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(26),
@@ -182,12 +200,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.person_outline_rounded, color: AppTheme.textDark),
+                              Icon(
+                                Icons.person_outline_rounded,
+                                color: Colors.white,
+                              ),
                               SizedBox(width: 8),
                               Text(
-                                'Continue as Guest',
+                                'Masuk sebagai Guest',
                                 style: TextStyle(
-                                  color: AppTheme.textDark,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
                                 ),
@@ -204,17 +225,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      "Don't have an account? ",
+                      'Belum punya akun? ',
                       style: TextStyle(color: AppTheme.textMuted),
                     ),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                        );
-                      },
+                      onTap: _showAuthDevelopmentMessage,
                       child: const Text(
-                        'Sign Up',
+                        'Daftar',
                         style: TextStyle(
                           color: AppTheme.primaryDarkTeal,
                           fontWeight: FontWeight.bold,

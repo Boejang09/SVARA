@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 class SvaraLogo extends StatelessWidget {
+  static const String assetPath = 'assets/images/svara_logo_exact.png';
+  static const Color logoColor = Color(0xFF2DBEB0);
+
   final double size;
   final bool showText;
   final String? tagline;
@@ -17,25 +20,13 @@ class SvaraLogo extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
+        SizedBox(
           width: size,
           height: size,
-          decoration: BoxDecoration(
-            color: const Color(0xFF00BFA5),
-            borderRadius: BorderRadius.circular(size * 0.28),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF00BFA5).withValues(alpha: 0.25),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Center(
-            child: CustomPaint(
-              size: Size(size * 0.55, size * 0.55),
-              painter: _SvaraEmblemPainter(),
-            ),
+          child: Image.asset(
+            assetPath,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
           ),
         ),
         if (showText) ...[
@@ -71,11 +62,7 @@ class SvaraWordmark extends StatelessWidget {
   final double markSize;
   final double fontSize;
 
-  const SvaraWordmark({
-    super.key,
-    this.markSize = 36,
-    this.fontSize = 20,
-  });
+  const SvaraWordmark({super.key, this.markSize = 36, this.fontSize = 20});
 
   @override
   Widget build(BuildContext context) {
@@ -102,63 +89,31 @@ class _SvaraMark extends StatelessWidget {
   final double size;
   final bool hasShadow;
 
-  const _SvaraMark({
-    required this.size,
-    required this.hasShadow,
-  });
+  const _SvaraMark({required this.size, required this.hasShadow});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: const Color(0xFF00BFA5),
-        borderRadius: BorderRadius.circular(size * 0.28),
-        boxShadow: hasShadow
-            ? [
-                BoxShadow(
-                  color: const Color(0xFF00BFA5).withValues(alpha: 0.25),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ]
-            : null,
-      ),
-      child: Center(
-        child: CustomPaint(
-          size: Size(size * 0.55, size * 0.55),
-          painter: _SvaraEmblemPainter(),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          boxShadow: hasShadow
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Image.asset(
+          SvaraLogo.assetPath,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.high,
         ),
       ),
     );
   }
-}
-
-class _SvaraEmblemPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.width * 0.16
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = Path();
-    
-    path.moveTo(size.width * 0.2, size.height * 0.35);
-    path.lineTo(size.width * 0.5, size.height * 0.85);
-    path.lineTo(size.width * 0.8, size.height * 0.35);
-    
-    path.moveTo(size.width * 0.35, size.height * 0.2);
-    path.lineTo(size.width * 0.65, size.height * 0.2);
-    path.lineTo(size.width * 0.5, size.height * 0.45);
-    path.close();
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

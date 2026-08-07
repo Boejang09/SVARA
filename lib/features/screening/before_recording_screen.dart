@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/features/screening/record_audio_screen.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
 class BeforeRecordingScreen extends StatelessWidget {
@@ -12,7 +12,10 @@ class BeforeRecordingScreen extends StatelessWidget {
       backgroundColor: AppTheme.bgMint,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.primaryDarkTeal),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppTheme.primaryDarkTeal,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const SvaraWordmark(markSize: 32, fontSize: 20),
@@ -24,7 +27,7 @@ class BeforeRecordingScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Before Recording',
+                'Sebelum Merekam',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
@@ -33,7 +36,7 @@ class BeforeRecordingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Follow these steps to ensure a high-quality\nclinical screening.',
+                'Ikuti langkah-langkah berikut untuk\nmemastikan hasil rekaman berkualitas tinggi.',
                 style: TextStyle(
                   color: AppTheme.textMuted,
                   fontSize: 14,
@@ -53,14 +56,14 @@ class BeforeRecordingScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _buildPlacementCard(
-                        title: 'Front Placement',
+                        title: 'Posisi Depan',
                         icon: Icons.accessibility_new_rounded,
                       ),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: _buildPlacementCard(
-                        title: 'Back Placement',
+                        title: 'Posisi Belakang',
                         icon: Icons.person_rounded,
                       ),
                     ),
@@ -72,26 +75,26 @@ class BeforeRecordingScreen extends StatelessWidget {
               // Checklist Tiles
               _buildStepTile(
                 icon: Icons.chair_rounded,
-                title: 'Sit comfortably',
-                desc: 'Keep your back straight and relaxed.',
+                title: 'Duduk dengan nyaman',
+                desc: 'Jaga punggung tetap tegak dan rileks.',
               ),
               const SizedBox(height: 10),
               _buildStepTile(
                 icon: Icons.volume_off_rounded,
-                title: 'Stay in quiet',
-                desc: 'Minimize background noise and talking.',
+                title: 'Cari tempat yang tenang',
+                desc: 'Minimalkan kebisingan dan pembicaraan.',
               ),
               const SizedBox(height: 10),
               _buildStepTile(
                 icon: Icons.pan_tool_rounded,
-                title: 'Hold steadily',
-                desc: 'Avoid moving the phone during recording.',
+                title: 'Pegang dengan stabil',
+                desc: 'Hindari menggerakkan ponsel saat merekam.',
               ),
               const SizedBox(height: 10),
               _buildStepTile(
                 icon: Icons.accessibility_rounded,
-                title: 'Follow body',
-                desc: 'Place phone exactly as shown above.',
+                title: 'Ikuti posisi tubuh',
+                desc: 'Letakkan ponsel tepat seperti gambar di atas.',
               ),
               const SizedBox(height: 24),
 
@@ -100,14 +103,13 @@ class BeforeRecordingScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const RecordAudioScreen()),
-                    );
-                  },
-                  icon: const Icon(Icons.play_circle_fill_rounded, color: Colors.white),
+                  onPressed: () => AppRouter.toRecordAudio(context),
+                  icon: const Icon(
+                    Icons.play_circle_fill_rounded,
+                    color: Colors.white,
+                  ),
                   label: const Text(
-                    'Start Recording',
+                    'Mulai Rekaman',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -115,7 +117,7 @@ class BeforeRecordingScreen extends StatelessWidget {
               const SizedBox(height: 12),
               const Center(
                 child: Text(
-                  'By starting, you agree to the clinical data\ncollection guidelines.',
+                  'Dengan memulai, Anda menyetujui panduan\npengumpulan data klinis.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
                 ),
@@ -190,7 +192,10 @@ class BeforeRecordingScreen extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   desc,
-                  style: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textMuted,
+                  ),
                 ),
               ],
             ),

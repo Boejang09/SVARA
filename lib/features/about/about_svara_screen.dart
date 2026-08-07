@@ -11,7 +11,10 @@ class AboutSvaraScreen extends StatelessWidget {
       backgroundColor: AppTheme.bgMint,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.primaryDarkTeal),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppTheme.primaryDarkTeal,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const SvaraWordmark(markSize: 32, fontSize: 20),
@@ -23,7 +26,7 @@ class AboutSvaraScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Pioneering Respiratory\nWellness',
+                'Inovasi Kesehatan\nJantung',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
@@ -33,7 +36,7 @@ class AboutSvaraScreen extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const Text(
-                'We are redefining how the world listens to\nhealth, one breath at a time.',
+                'Kami mendefinisikan ulang cara dunia mendengarkan\nkesehatan, satu detak jantung dalam satu waktu.',
                 style: TextStyle(
                   fontSize: 14,
                   color: AppTheme.textMuted,
@@ -45,26 +48,32 @@ class AboutSvaraScreen extends StatelessWidget {
               // Card: Our Mission
               _buildInfoCard(
                 icon: Icons.rocket_launch_outlined,
-                title: 'Our Mission',
-                desc: 'To provide accessible, non-invasive respiratory screening to every corner of the globe using the power of sound and artificial intelligence. We aim to empower individuals with early insights into their lung health, enabling proactive medical intervention.',
+                title: 'Misi Kami',
+                desc:
+                    'Menyediakan skrining kesehatan jantung yang mudah diakses dan non-invasif ke seluruh penjuru dunia menggunakan kekuatan suara dan kecerdasan buatan. Kami bertujuan memberdayakan individu dengan wawasan dini tentang kesehatan jantung mereka, sehingga memungkinkan intervensi medis yang proaktif.',
               ),
               const SizedBox(height: 16),
 
               // Card: Our Vision
               _buildInfoCard(
                 icon: Icons.remove_red_eye_outlined,
-                title: 'Our Vision',
-                desc: 'A world where respiratory conditions are caught long before symptoms become severe. SVARA envisions a future where your smartphone serves as a sophisticated clinical companion, bridging the gap between everyday life and professional medical care.',
+                title: 'Visi Kami',
+                desc:
+                    'Dunia di mana kondisi jantung terdeteksi jauh sebelum gejala menjadi serius. SVARA membayangkan masa depan di mana smartphone Anda berfungsi sebagai pendamping klinis yang canggih, menjembatani kesenjangan antara kehidupan sehari-hari dan perawatan medis profesional.',
               ),
               const SizedBox(height: 28),
 
               // How SVARA Works Section
               Row(
                 children: [
-                  const Icon(Icons.lightbulb_outline_rounded, color: AppTheme.primaryTeal, size: 22),
+                  const Icon(
+                    Icons.lightbulb_outline_rounded,
+                    color: AppTheme.primaryTeal,
+                    size: 22,
+                  ),
                   const SizedBox(width: 8),
                   const Text(
-                    'How SVARA Works',
+                    'Cara Kerja SVARA',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -77,22 +86,25 @@ class AboutSvaraScreen extends StatelessWidget {
 
               _buildStepCard(
                 stepNum: '01',
-                stepTitle: 'CAPTURE',
-                desc: 'The app records your cough or breathing pattern using clinical-grade audio processing algorithms optimized for smartphones.',
+                stepTitle: 'REKAM',
+                desc:
+                    'Aplikasi merekam suara jantung Anda menggunakan algoritma pemrosesan audio berstandar klinis yang dioptimalkan untuk smartphone.',
                 icon: Icons.mic_none_rounded,
               ),
               const SizedBox(height: 12),
               _buildStepCard(
                 stepNum: '02',
-                stepTitle: 'ANALYZE',
-                desc: 'Our deep-learning models decompose the audio signal, identifying patterns associated with various respiratory biomarkers.',
+                stepTitle: 'ANALISIS',
+                desc:
+                    'Model deep-learning kami menguraikan sinyal audio, mengidentifikasi pola yang terkait dengan berbagai biomarker jantung.',
                 icon: Icons.graphic_eq_rounded,
               ),
               const SizedBox(height: 12),
               _buildStepCard(
                 stepNum: '03',
-                stepTitle: 'ASSESS',
-                desc: 'The AI provides an immediate risk score and actionable insights, helping you decide when to seek professional medical advice.',
+                stepTitle: 'NILAI',
+                desc:
+                    'AI memberikan skor risiko dan wawasan yang dapat ditindaklanjuti secara langsung, membantu Anda memutuskan kapan harus mencari saran medis profesional.',
                 icon: Icons.assessment_outlined,
               ),
               const SizedBox(height: 28),
@@ -109,7 +121,7 @@ class AboutSvaraScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Driven by Science',
+                      'Didukung oleh Ilmu Pengetahuan',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -118,7 +130,7 @@ class AboutSvaraScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Our technology is backed by years of clinical research and validated against gold-standard medical data.',
+                      'Teknologi kami didukung oleh penelitian klinis bertahun-tahun dan divalidasi terhadap data medis standar emas.',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.85),
@@ -141,14 +153,18 @@ class AboutSvaraScreen extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.warning_amber_rounded, color: Colors.amber.shade800, size: 24),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.amber.shade800,
+                      size: 24,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Mandatory Disclaimer',
+                            'Pernyataan Penting',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
@@ -157,7 +173,7 @@ class AboutSvaraScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'SVARA provides early risk assessment only and does not replace professional medical diagnosis. The information provided by this application is for informational purposes only and is not intended as a substitute for advice from your physician or other healthcare professionals. Always seek the advice of a qualified healthcare provider with any questions you may have regarding a medical condition.',
+                            'SVARA hanya memberikan penilaian risiko awal dan tidak menggantikan diagnosis medis profesional. Informasi yang diberikan oleh aplikasi ini hanya untuk tujuan informasi dan tidak dimaksudkan sebagai pengganti saran dari dokter atau tenaga kesehatan profesional Anda. Selalu konsultasikan kepada tenaga kesehatan yang berkualifikasi mengenai kondisi medis Anda.',
                             style: TextStyle(
                               fontSize: 12.5,
                               color: Colors.grey.shade700,

@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/features/advice/advice_screen.dart';
 import 'package:svara_app/features/dashboard/dashboard_screen.dart';
 import 'package:svara_app/features/history/history_screen.dart';
 import 'package:svara_app/features/profile/profile_screen.dart';
-import 'package:svara_app/features/screening/before_recording_screen.dart';
 import 'package:svara_app/widgets/bottom_nav_bar.dart';
 import 'package:svara_app/widgets/mobile_wrapper.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
 
-  const MainNavigationScreen({
-    super.key,
-    this.initialIndex = 0,
-  });
+  const MainNavigationScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainNavigationScreen> createState() => _MainNavigationScreenState();
@@ -30,9 +27,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   void _onTabSelected(int index) {
     if (index == 2) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const BeforeRecordingScreen()),
-      );
+      AppRouter.startScreening(context);
     } else {
       setState(() {
         _currentIndex = index;

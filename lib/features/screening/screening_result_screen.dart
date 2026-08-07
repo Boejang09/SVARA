@@ -1,10 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/mock/screening_store.dart';
+import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/features/dashboard/main_navigation_screen.dart';
+import 'package:svara_app/widgets/development_notice.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
-class ScreeningResultScreen extends StatelessWidget {
+class ScreeningResultScreen extends StatefulWidget {
   const ScreeningResultScreen({super.key});
+
+  @override
+  State<ScreeningResultScreen> createState() => _ScreeningResultScreenState();
+}
+
+class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
+  bool _saved = false;
+
+  void _saveResult() {
+    if (_saved) return;
+    ScreeningStore.addLatestResult();
+    _saved = true;
+  }
+
+  void _saveAndGoHome() {
+    _saveResult();
+    AppRouter.finishScreeningToHome(context);
+  }
+
+  void _saveAndGoHistory() {
+    _saveResult();
+    AppRouter.finishScreeningToHistory(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,18 +44,16 @@ class ScreeningResultScreen extends StatelessWidget {
               Icons.notifications_none_rounded,
               color: AppTheme.primaryDarkTeal,
             ),
-            onPressed: () {},
+            onPressed: () => showDevelopmentSnack(context),
           ),
         ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             children: [
+
 
               Stack(
                 alignment: Alignment.center,
@@ -42,8 +65,7 @@ class ScreeningResultScreen extends StatelessWidget {
                       value: 0.92,
                       strokeWidth: 14,
                       backgroundColor: Colors.grey.shade200,
-                      valueColor:
-                          const AlwaysStoppedAnimation<Color>(
+                      valueColor: const AlwaysStoppedAnimation<Color>(
                         AppTheme.primaryTeal,
                       ),
                     ),
@@ -62,7 +84,7 @@ class ScreeningResultScreen extends StatelessWidget {
                       ),
 
                       Text(
-                        'Low Risk',
+                        'Risiko Rendah',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -77,7 +99,7 @@ class ScreeningResultScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               const Text(
-                'Screening Complete',
+                'Skrining Selesai - Pratinjau',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -88,7 +110,7 @@ class ScreeningResultScreen extends StatelessWidget {
               const SizedBox(height: 6),
 
               const Text(
-                'Based on your latest scan, your respiratory and\ncardiac indicators are within healthy ranges.',
+                'Hasil ini menggunakan data contoh untuk mendemokan alur MVP sampai model ML tersedia.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13.5,
@@ -107,23 +129,17 @@ class ScreeningResultScreen extends StatelessWidget {
                 ),
 
                 child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                   children: [
-
                     Row(
                       children: [
-
                         Container(
-                          padding:
-                              const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(10),
 
                           decoration: BoxDecoration(
-                            color:
-                                AppTheme.primaryLightTeal,
-                            borderRadius:
-                                BorderRadius.circular(14),
+                            color: AppTheme.primaryLightTeal,
+                            borderRadius: BorderRadius.circular(14),
                           ),
 
                           child: const Icon(
@@ -135,61 +151,50 @@ class ScreeningResultScreen extends StatelessWidget {
                         const SizedBox(width: 14),
 
                         const Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
 
                           children: [
-
                             Text(
-                              'AI Confidence',
+                              'Kepercayaan AI',
                               style: TextStyle(
                                 fontSize: 13,
-                                color:
-                                    AppTheme.textMuted,
+                                color: AppTheme.textMuted,
                               ),
                             ),
 
                             Text(
-                              '98% Accuracy Score',
+                              'Contoh Skor Risiko',
                               style: TextStyle(
                                 fontSize: 15,
-                                fontWeight:
-                                    FontWeight.bold,
-                                color:
-                                    AppTheme.primaryDarkTeal,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryDarkTeal,
                               ),
                             ),
-
                           ],
                         ),
-
                       ],
                     ),
 
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 4,
                       ),
 
                       decoration: BoxDecoration(
                         color: AppTheme.primaryTeal,
-                        borderRadius:
-                            BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(14),
                       ),
 
                       child: const Text(
-                        'High Reliability',
+                        'Preview',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 11,
-                          fontWeight:
-                              FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-
                   ],
                 ),
               ),
@@ -199,25 +204,14 @@ class ScreeningResultScreen extends StatelessWidget {
               _buildMetricCard(
                 icon: Icons.favorite_rounded,
                 iconColor: Colors.redAccent,
-                title: 'Heart Analysis',
+                title: 'Analisis Jantung',
                 val: 'Normal',
-                subText: '72 BPM Avg',
+                subText: '72 BPM Rata-rata',
                 progress: 0.75,
               ),
 
-              const SizedBox(height: 12),
-
-              _buildMetricCard(
-                icon: Icons.air_rounded,
-                iconColor: AppTheme.primaryTeal,
-                title: 'Respiratory',
-                val: 'Normal',
-                subText: '14 BrPM',
-                progress: 0.88,
-              ),
-
               const SizedBox(height: 20),
-                            // Clinical Recommendations
+              // Clinical Recommendations
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -227,68 +221,50 @@ class ScreeningResultScreen extends StatelessWidget {
                 ),
 
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
 
                   children: [
-
                     const Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                       children: [
-
                         Text(
-                          'Clinical Recommendations',
+                          'Rekomendasi Klinis',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight:
-                                FontWeight.bold,
-                            color:
-                                AppTheme.textDark,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textDark,
                           ),
                         ),
 
                         Icon(
                           Icons.thumb_up_alt_outlined,
                           size: 18,
-                          color:
-                              AppTheme.primaryTeal,
+                          color: AppTheme.primaryTeal,
                         ),
-
                       ],
                     ),
 
-
                     const SizedBox(height: 14),
 
-
                     _buildRecommendationItem(
-                      title:
-                          'Continue regular monitoring',
+                      title: 'Lanjutkan pemantauan rutin',
                       desc:
-                          'Your baseline is stable. Next scan recommended in 7 days.',
+                          'Kondisi jantung Anda stabil. Skrining berikutnya disarankan dalam 7 hari.',
                     ),
-
 
                     const SizedBox(height: 12),
 
-
                     _buildRecommendationItem(
-                      title:
-                          'Hydration Optimization',
+                      title: 'Optimasi Hidrasi',
                       desc:
-                          'Slight heart rate variability noted; increase water intake before next scan.',
+                          'Variabilitas detak jantung terdeteksi ringan; tingkatkan asupan air sebelum skrining berikutnya.',
                     ),
-
                   ],
                 ),
               ),
 
-
               const SizedBox(height: 24),
-
-
 
               // Save Result Button
               SizedBox(
@@ -296,249 +272,112 @@ class ScreeningResultScreen extends StatelessWidget {
                 height: 54,
 
                 child: ElevatedButton(
-
-                  onPressed: () {
-
-                    Navigator.of(context)
-                        .pushAndRemoveUntil(
-
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const MainNavigationScreen(
-                              initialIndex: 0,
-                            ),
-                      ),
-
-                      (route) => false,
-
-                    );
-
-                  },
-
+                  onPressed: _saveAndGoHome,
 
                   style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryDarkTeal,
 
-                    backgroundColor:
-                        AppTheme.primaryDarkTeal,
-
-                    shape:
-                        RoundedRectangleBorder(
-
-                      borderRadius:
-                          BorderRadius.circular(27),
-
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(27),
                     ),
-
                   ),
-
 
                   child: const Text(
-                    'Save Result',
+                    'Simpan Sementara',
 
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-
                 ),
-
               ),
 
-
-
               const SizedBox(height: 12),
-
-
 
               // Bottom Buttons
               Row(
                 children: [
-
-
                   Expanded(
-
                     child: OutlinedButton.icon(
+                      onPressed: () => AppRouter.finishScreeningToHome(context),
 
-                      onPressed: () {
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
 
-                        Navigator.of(context)
-                            .pushAndRemoveUntil(
+                        side: BorderSide.none,
 
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const MainNavigationScreen(
-                                  initialIndex: 0,
-                                ),
-                          ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
 
-                          (route) => false,
-
-                        );
-
-                      },
-
-
-                      style:
-                          OutlinedButton.styleFrom(
-
-                        backgroundColor:
-                            Colors.grey.shade200,
-
-                        side:
-                            BorderSide.none,
-
-                        padding:
-                            const EdgeInsets.symmetric(
-                          vertical: 14,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-
-                        shape:
-                            RoundedRectangleBorder(
-
-                          borderRadius:
-                              BorderRadius.circular(20),
-
-                        ),
-
                       ),
-
 
                       icon: const Icon(
-
                         Icons.home_rounded,
 
-                        color:
-                            AppTheme.textDark,
+                        color: AppTheme.textDark,
 
                         size: 18,
-
                       ),
-
 
                       label: const Text(
-
-                        'Back to Home',
+                        'Beranda',
 
                         style: TextStyle(
+                          color: AppTheme.textDark,
 
-                          color:
-                              AppTheme.textDark,
-
-                          fontWeight:
-                              FontWeight.bold,
-
+                          fontWeight: FontWeight.bold,
                         ),
-
                       ),
-
                     ),
-
                   ),
-
-
 
                   const SizedBox(width: 12),
 
-
-
                   Expanded(
-
                     child: OutlinedButton.icon(
+                      onPressed: _saveAndGoHistory,
 
-                      onPressed: () {
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
 
-                        Navigator.of(context)
-                            .pushAndRemoveUntil(
+                        side: BorderSide.none,
 
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                const MainNavigationScreen(
-                                  initialIndex: 1,
-                                ),
-                          ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
 
-                          (route) => false,
-
-                        );
-
-                      },
-
-
-                      style:
-                          OutlinedButton.styleFrom(
-
-                        backgroundColor:
-                            Colors.grey.shade200,
-
-                        side:
-                            BorderSide.none,
-
-                        padding:
-                            const EdgeInsets.symmetric(
-                          vertical: 14,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-
-                        shape:
-                            RoundedRectangleBorder(
-
-                          borderRadius:
-                              BorderRadius.circular(20),
-
-                        ),
-
                       ),
-
 
                       icon: const Icon(
-
                         Icons.history_rounded,
 
-                        color:
-                            AppTheme.textDark,
+                        color: AppTheme.textDark,
 
                         size: 18,
-
                       ),
-
 
                       label: const Text(
-
-                        'View History',
+                        'Riwayat',
 
                         style: TextStyle(
+                          color: AppTheme.textDark,
 
-                          color:
-                              AppTheme.textDark,
-
-                          fontWeight:
-                              FontWeight.bold,
-
+                          fontWeight: FontWeight.bold,
                         ),
-
                       ),
-
                     ),
-
                   ),
-
                 ],
-
               ),
 
-
               const SizedBox(height: 24),
-
             ],
           ),
         ),
       ),
     );
   }
-
-
 
   Widget _buildMetricCard({
     required IconData icon,
@@ -548,251 +387,138 @@ class ScreeningResultScreen extends StatelessWidget {
     required String subText,
     required double progress,
   }) {
-
     return Container(
+      padding: const EdgeInsets.all(18),
 
-      padding:
-          const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
 
-      decoration:
-          BoxDecoration(
-
-        color:
-            Colors.white,
-
-        borderRadius:
-            BorderRadius.circular(20),
-
+        borderRadius: BorderRadius.circular(20),
       ),
 
-
       child: Column(
-
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-
+        crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
-
           Row(
-
             children: [
-
-              Icon(
-                icon,
-                color:
-                    iconColor,
-                size: 20,
-              ),
-
+              Icon(icon, color: iconColor, size: 20),
 
               const SizedBox(width: 8),
 
-
               Text(
                 title,
-                style:
-                    const TextStyle(
-                  fontSize: 14,
-                  color:
-                      AppTheme.textMuted,
-                ),
+                style: const TextStyle(fontSize: 14, color: AppTheme.textMuted),
               ),
-
             ],
-
           ),
-
 
           const SizedBox(height: 8),
 
-
           Row(
-
             children: [
-
               Text(
                 val,
-                style:
-                    const TextStyle(
+                style: const TextStyle(
                   fontSize: 20,
-                  fontWeight:
-                      FontWeight.bold,
-                  color:
-                      AppTheme.textDark,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
                 ),
               ),
-
 
               const SizedBox(width: 10),
 
-
               Text(
                 subText,
-                style:
-                    const TextStyle(
-                  fontSize: 13,
-                  color:
-                      AppTheme.textMuted,
-                ),
+                style: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
               ),
-
             ],
-
           ),
-
 
           const SizedBox(height: 10),
 
-
           ClipRRect(
+            borderRadius: BorderRadius.circular(4),
 
-            borderRadius:
-                BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
 
-            child:
-                LinearProgressIndicator(
+              minHeight: 6,
 
-              value:
-                  progress,
+              backgroundColor: Colors.grey.shade100,
 
-              minHeight:
-                  6,
-
-              backgroundColor:
-                  Colors.grey.shade100,
-
-              valueColor:
-                  const AlwaysStoppedAnimation<Color>(
+              valueColor: const AlwaysStoppedAnimation<Color>(
                 AppTheme.primaryTeal,
               ),
-
             ),
-
           ),
-
         ],
-
       ),
-
     );
-
   }
-
-
 
   Widget _buildRecommendationItem({
     required String title,
     required String desc,
   }) {
-
     return Container(
+      padding: const EdgeInsets.all(14),
 
-      padding:
-          const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.bgMint,
 
-      decoration:
-          BoxDecoration(
-
-        color:
-            AppTheme.bgMint,
-
-        borderRadius:
-            BorderRadius.circular(16),
-
+        borderRadius: BorderRadius.circular(16),
       ),
 
-
       child: Row(
-
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-
+        crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
-
           const Icon(
-
             Icons.check_circle_rounded,
 
-            color:
-                AppTheme.primaryTeal,
+            color: AppTheme.primaryTeal,
 
-            size:
-                20,
-
+            size: 20,
           ),
-
 
           const SizedBox(width: 10),
 
-
           Expanded(
-
             child: Column(
-
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
-
+              crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
-
                 Text(
-
                   title,
 
-                  style:
-                      const TextStyle(
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
 
-                    fontWeight:
-                        FontWeight.bold,
+                    fontSize: 14,
 
-                    fontSize:
-                        14,
-
-                    color:
-                        AppTheme.textDark,
-
+                    color: AppTheme.textDark,
                   ),
-
                 ),
-
 
                 const SizedBox(height: 2),
 
-
                 Text(
-
                   desc,
 
-                  style:
-                      const TextStyle(
+                  style: const TextStyle(
+                    fontSize: 12.5,
 
-                    fontSize:
-                        12.5,
+                    color: AppTheme.textMuted,
 
-                    color:
-                        AppTheme.textMuted,
-
-                    height:
-                        1.3,
-
+                    height: 1.3,
                   ),
-
                 ),
-
               ],
-
             ),
-
           ),
-
         ],
-
       ),
-
     );
-
   }
-
 }
