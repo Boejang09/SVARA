@@ -33,33 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: AppTheme.bgMint,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            const SvaraLogo(size: 38, showText: false),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Selamat Pagi,',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const Text(
-                  'Guest',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: AppTheme.primaryDarkTeal,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+        title: const SvaraWordmark(markSize: 32, fontSize: 20),
         actions: [
           IconButton(
             icon: const Icon(
@@ -100,7 +74,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Mulai Skrining Baru',
+                          'Selamat Pagi, Guest',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,

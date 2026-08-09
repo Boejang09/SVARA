@@ -1,6 +1,6 @@
 {
-    "name": "svara_app",
-    "short_name": "svara_app",
+    "name": "SVARA",
+    "short_name": "SVARA",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

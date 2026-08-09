@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
@@ -21,22 +19,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     OnboardingItem(
       title: 'Deteksi Dini\nKesehatan Jantung',
       subtitle: 'Pantau kesehatan jantung Anda\nhanya menggunakan smartphone.',
-      icon: Icons.monitor_heart_rounded,
-      badgeText: 'Analisis AI',
+      imagePath: 'assets/images/onboarding_heart_detection.png',
     ),
     OnboardingItem(
       title: 'Rekam Suara\nJantung Anda',
       subtitle:
           'Tempelkan smartphone di posisi tubuh\nyang disarankan dan rekam\nsuara jantung Anda.',
-      icon: Icons.graphic_eq_rounded,
-      badgeText: 'Merekam',
+      imagePath: 'assets/images/onboarding_record_heart.png',
     ),
     OnboardingItem(
       title: 'Penilaian Risiko AI',
       subtitle:
           'Dapatkan penilaian risiko jantung\nberbasis AI dan rekomendasi\nkesehatan yang dipersonalisasi.',
-      icon: Icons.analytics_rounded,
-      badgeText: 'Risiko Rendah',
+      imagePath: 'assets/images/onboarding_risk_assessment.png',
     ),
   ];
 
@@ -71,7 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SvaraWordmark(markSize: 34, fontSize: 22),
+                    const SvaraWordmark(markSize: 32, fontSize: 20),
                     TextButton(
                       onPressed: _navigateToLogin,
                       child: const Text(
@@ -99,7 +94,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         return SingleChildScrollView(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
-                            vertical: 8,
+                            vertical: 0,
                           ),
                           child: ConstrainedBox(
                             constraints: BoxConstraints(
@@ -108,8 +103,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                _buildIllustrationCard(context, item),
-                                const SizedBox(height: 24),
+                                _buildIllustration(context, item),
+                                const SizedBox(height: 16),
                                 Text(
                                   item.title,
                                   textAlign: TextAlign.center,
@@ -209,9 +204,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildIllustrationCard(BuildContext context, OnboardingItem item) {
+  /// Builds the illustration area for each onboarding slide.
+  /// If the item has an imagePath, it renders the image directly (no card/box).
+  /// If the item has an icon, it renders the original card-based layout.
+  Widget _buildIllustration(BuildContext context, OnboardingItem item) {
+    if (item.imagePath != null) {
+      // Image-based slide: show image directly, centered and responsive
+      final availableWidth = MediaQuery.sizeOf(context).width - 48;
+
+      return ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: availableWidth,
+          maxHeight: availableWidth * 0.85,
+        ),
+        child: Image.asset(
+          item.imagePath!,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.high,
+        ),
+      );
+    }
+
+    // Icon-based slide (slide 3): keep original card layout
     final availableWidth = MediaQuery.sizeOf(context).width - 48;
-    final cardHeight = math.min(260.0, availableWidth * 0.78);
+    final cardHeight = availableWidth * 0.78 < 260.0
+        ? availableWidth * 0.78
+        : 260.0;
 
     return SizedBox(
       width: double.infinity,
@@ -251,34 +269,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               child: Icon(item.icon, color: AppTheme.primaryTeal, size: 58),
             ),
-            Positioned(
-              bottom: 28,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 14,
-                      offset: const Offset(0, 6),
+            if (item.badgeText != null)
+              Positioned(
+                bottom: 28,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    item.badgeText!,
+                    style: const TextStyle(
+                      color: AppTheme.primaryDarkTeal,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
-                child: Text(
-                  item.badgeText,
-                  style: const TextStyle(
-                    color: AppTheme.primaryDarkTeal,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -289,13 +308,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 class OnboardingItem {
   final String title;
   final String subtitle;
-  final IconData icon;
-  final String badgeText;
+  final IconData? icon;
+  final String? badgeText;
+  final String? imagePath;
 
   const OnboardingItem({
     required this.title,
     required this.subtitle,
-    required this.icon,
-    required this.badgeText,
+    this.icon,
+    this.badgeText,
+    this.imagePath,
   });
 }
