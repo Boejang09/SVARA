@@ -104,7 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 _buildIllustration(context, item),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 12),
                                 Text(
                                   item.title,
                                   textAlign: TextAlign.center,
@@ -215,7 +215,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: availableWidth,
-          maxHeight: availableWidth * 0.85,
+          maxHeight: availableWidth * 1.1,
         ),
         child: Image.asset(
           item.imagePath!,
@@ -227,9 +227,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     // Icon-based slide (slide 3): keep original card layout
     final availableWidth = MediaQuery.sizeOf(context).width - 48;
-    final cardHeight = availableWidth * 0.78 < 260.0
-        ? availableWidth * 0.78
-        : 260.0;
+    final cardHeight = availableWidth * 0.9 < 320.0
+        ? availableWidth * 0.9
+        : 320.0;
 
     return SizedBox(
       width: double.infinity,
