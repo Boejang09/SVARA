@@ -5,7 +5,9 @@ import 'package:svara_app/core/theme/app_theme.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
 class AILoadingScreen extends StatefulWidget {
-  const AILoadingScreen({super.key});
+  final String? audioPath;
+
+  const AILoadingScreen({super.key, this.audioPath});
 
   @override
   State<AILoadingScreen> createState() => _AILoadingScreenState();
@@ -38,7 +40,7 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
 
   void _navigateToResults() {
     Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) AppRouter.toScreeningResult(context);
+      if (mounted) AppRouter.toScreeningResult(context, widget.audioPath);
     });
   }
 

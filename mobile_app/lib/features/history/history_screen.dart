@@ -3,6 +3,7 @@ import 'package:svara_app/core/mock/screening_record.dart';
 import 'package:svara_app/core/mock/screening_store.dart';
 import 'package:svara_app/core/router/app_routes.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:svara_app/widgets/skeleton/skeleton.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -100,14 +101,44 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 }
 
-class _HistoryRecordCard extends StatelessWidget {
+class _HistoryRecordCard extends StatefulWidget {
   final ScreeningRecord record;
 
   const _HistoryRecordCard({required this.record});
 
   @override
+  State<_HistoryRecordCard> createState() => _HistoryRecordCardState();
+}
+
+class _HistoryRecordCardState extends State<_HistoryRecordCard> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlaying = false;
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  void _togglePlay() async {
+    if (widget.record.audioPath == null) return;
+    
+    if (_isPlaying) {
+      await _audioPlayer.pause();
+      setState(() => _isPlaying = false);
+    } else {
+      await _audioPlayer.play(DeviceFileSource(widget.record.audioPath!));
+      setState(() => _isPlaying = true);
+      
+      _audioPlayer.onPlayerComplete.listen((event) {
+        if (mounted) setState(() => _isPlaying = false);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final riskColor = record.isLowRisk
+    final riskColor = widget.record.isLowRisk
         ? AppTheme.primaryTeal
         : AppTheme.statusWarning;
 
@@ -124,7 +155,7 @@ class _HistoryRecordCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  record.formattedDate,
+                  widget.record.formattedDate,
                   style: const TextStyle(
                     color: AppTheme.textMuted,
                     fontSize: 12,
@@ -142,9 +173,9 @@ class _HistoryRecordCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  record.riskLevel,
+                  widget.record.riskLevel,
                   style: TextStyle(
-                    color: record.isLowRisk
+                    color: widget.record.isLowRisk
                         ? AppTheme.primaryDarkTeal
                         : Colors.orange.shade900,
                     fontSize: 11,
@@ -155,13 +186,29 @@ class _HistoryRecordCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            record.title,
-            style: const TextStyle(
-              color: AppTheme.textDark,
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  widget.record.title,
+                  style: const TextStyle(
+                    color: AppTheme.textDark,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (widget.record.audioPath != null)
+                IconButton(
+                  icon: Icon(
+                    _isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
+                    color: AppTheme.primaryTeal,
+                    size: 32,
+                  ),
+                  onPressed: _togglePlay,
+                ),
+            ],
           ),
           const SizedBox(height: 14),
           Row(
@@ -170,7 +217,7 @@ class _HistoryRecordCard extends StatelessWidget {
                 child: _MetricMini(
                   icon: Icons.favorite_border_rounded,
                   label: 'Jantung',
-                  value: record.heartStatus,
+                  value: widget.record.heartStatus,
                 ),
               ),
               const SizedBox(width: 10),
@@ -178,14 +225,14 @@ class _HistoryRecordCard extends StatelessWidget {
                 child: _MetricMini(
                   icon: Icons.air_rounded,
                   label: '',
-                  value: record.isLowRisk ? 'Optimal' : 'Normal',
+                  value: widget.record.isLowRisk ? 'Optimal' : 'Normal',
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            record.idText,
+            widget.record.idText,
             style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
           ),
         ],

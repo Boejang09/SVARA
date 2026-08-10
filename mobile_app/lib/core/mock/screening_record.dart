@@ -7,6 +7,7 @@ class ScreeningRecord {
   final bool isLowRisk;
   final String heartStatus;
   final String type;
+  final String? audioPath;
 
   const ScreeningRecord({
     required this.id,
@@ -17,6 +18,7 @@ class ScreeningRecord {
     required this.isLowRisk,
     required this.heartStatus,
     this.type = 'jantung',
+    this.audioPath,
   });
 
   String get formattedDate {

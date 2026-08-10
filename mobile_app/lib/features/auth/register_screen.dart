@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/widgets/development_notice.dart';
+import 'package:svara_app/services/api_service.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -11,16 +12,71 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _agreeTOS = false;
   bool _obscurePass = true;
   bool _obscureConfirm = true;
+  bool _isLoading = false;
 
-  void _register() {
-    showDevelopmentSnack(
-      context,
-      message:
-          'Sedang dalam tahap pengembangan. Registrasi membutuhkan backend user.',
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _usernameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _register() async {
+    final nama = _nameController.text.trim();
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (nama.isEmpty || username.isEmpty || password.isEmpty) {
+      _showMessage('Nama lengkap, nama pengguna, dan kata sandi wajib diisi.');
+      return;
+    }
+    if (password != confirmPassword) {
+      _showMessage('Konfirmasi kata sandi tidak sama.');
+      return;
+    }
+    if (!_agreeTOS) {
+      _showMessage(
+        'Setujui syarat layanan dan kebijakan privasi terlebih dahulu.',
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final result = await ApiService.register(
+      username: username,
+      nama: nama,
+      password: password,
+      email: _emailController.text.trim(),
+      phone: _phoneController.text.trim(),
     );
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result.isSuccess) {
+      AppRouter.toMain(context);
+    } else {
+      _showMessage(result.message ?? 'Registrasi gagal.');
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -66,15 +122,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 style: TextStyle(color: AppTheme.textMuted, fontSize: 14),
               ),
               const SizedBox(height: 28),
-              const DevelopmentNotice(
-                message:
-                    'Registrasi akun membutuhkan backend user dan database. Untuk MVP saat ini gunakan mode Guest dari halaman login.',
-              ),
-              const SizedBox(height: 18),
               _buildLabel('Nama Lengkap'),
-              const TextField(
-                decoration: InputDecoration(
-                  hintText: 'John Doe',
+              TextField(
+                controller: _nameController,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  hintText: 'Budi Santoso',
                   prefixIcon: Icon(
                     Icons.person_outline_rounded,
                     color: AppTheme.textMuted,
@@ -82,11 +135,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildLabel('Email'),
-              const TextField(
+              _buildLabel('Nama Pengguna'),
+              TextField(
+                controller: _usernameController,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  hintText: 'budi',
+                  prefixIcon: Icon(
+                    Icons.account_circle_outlined,
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildLabel('Surel'),
+              TextField(
+                controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  hintText: 'john@example.com',
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  hintText: 'budi@example.com',
                   prefixIcon: Icon(
                     Icons.email_outlined,
                     color: AppTheme.textMuted,
@@ -95,9 +163,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
               _buildLabel('Nomor Telepon'),
-              const TextField(
+              TextField(
+                controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
                   hintText: '+62 812 3456 7890',
                   prefixIcon: Icon(
                     Icons.phone_outlined,
@@ -108,7 +178,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 16),
               _buildLabel('Kata Sandi'),
               TextField(
+                controller: _passwordController,
                 obscureText: _obscurePass,
+                textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   hintText: '********',
                   prefixIcon: const Icon(
@@ -130,7 +202,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 16),
               _buildLabel('Konfirmasi Kata Sandi'),
               TextField(
+                controller: _confirmPasswordController,
                 obscureText: _obscureConfirm,
+                textInputAction: TextInputAction.done,
                 decoration: InputDecoration(
                   hintText: '********',
                   prefixIcon: const Icon(
@@ -198,17 +272,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: _register,
+                  onPressed: _isLoading ? null : _register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryDarkTeal,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(27),
                     ),
                   ),
-                  child: const Text(
-                    'Buat Akun',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Buat Akun',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 24),

@@ -6,7 +6,9 @@ import 'package:svara_app/widgets/development_notice.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
 class ScreeningResultScreen extends StatefulWidget {
-  const ScreeningResultScreen({super.key});
+  final String? audioPath;
+
+  const ScreeningResultScreen({super.key, this.audioPath});
 
   @override
   State<ScreeningResultScreen> createState() => _ScreeningResultScreenState();
@@ -17,7 +19,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
 
   void _saveResult() {
     if (_saved) return;
-    ScreeningStore.addLatestResult();
+    ScreeningStore.addLatestResult(widget.audioPath);
     _saved = true;
   }
 

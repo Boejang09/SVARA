@@ -1,4 +1,4 @@
-# Environments
+# Environments (PENTING: jangan push secret keys & DB credentials)
 .env
 .env.*
 !.env.example
@@ -10,11 +10,29 @@ __pycache__/
 venv/
 env/
 .venv/
+*.egg-info/
+dist/
+*.egg
 
-# Flutter/Dart (Tambahan umum jika root repo)
+# Backend uploads (audio files user — besar & sensitif)
+backend/uploads/
+uploads/
+
+# Flutter/Dart
 .dart_tool/
 build/
 .pub-cache/
 .packages
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# OS generated
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

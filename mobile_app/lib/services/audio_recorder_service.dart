@@ -47,6 +47,9 @@ class AudioRecorderService {
         sampleRate: 44100,
         numChannels: 1, // Mono untuk analisis suara
         bitRate: 128000,
+        autoGain: false,
+        echoCancel: false,
+        noiseSuppress: false,
       );
 
       await _recorder.start(config, path: _currentFilePath!);

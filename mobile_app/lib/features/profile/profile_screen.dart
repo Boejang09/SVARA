@@ -101,7 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 14),
                           const Text(
-                            'Guest',
+                            'Tamu',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 22,

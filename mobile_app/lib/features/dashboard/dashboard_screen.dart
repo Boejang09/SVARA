@@ -3,6 +3,7 @@ import 'package:svara_app/core/theme/app_theme.dart';
 import 'package:svara_app/features/notifications/notifications_screen.dart';
 import 'package:svara_app/widgets/skeleton/skeleton.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
+import 'package:svara_app/services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback onStartScreening;
@@ -73,9 +74,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Selamat Pagi, Guest',
-                          style: TextStyle(
+                        Text(
+                          'Selamat Pagi, ${ApiService.currentUser?['nama'] ?? 'Tamu'}',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 22,
                             fontWeight: FontWeight.bold,

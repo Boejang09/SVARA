@@ -20,18 +20,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       title: 'Deteksi Dini\nKesehatan Jantung',
       subtitle: 'Pantau kesehatan jantung Anda\nhanya menggunakan smartphone.',
       imagePath: 'assets/images/onboarding_heart_detection.png',
+      cropRect: Rect.fromLTRB(64, 191, 769, 833),
     ),
     OnboardingItem(
       title: 'Rekam Suara\nJantung Anda',
       subtitle:
           'Tempelkan smartphone di posisi tubuh\nyang disarankan dan rekam\nsuara jantung Anda.',
       imagePath: 'assets/images/onboarding_record_heart.png',
+      cropRect: Rect.fromLTRB(45, 128, 753, 871),
     ),
     OnboardingItem(
       title: 'Penilaian Risiko AI',
       subtitle:
           'Dapatkan penilaian risiko jantung\nberbasis AI dan rekomendasi\nkesehatan yang dipersonalisasi.',
       imagePath: 'assets/images/onboarding_risk_assessment.png',
+      cropRect: Rect.fromLTRB(33, 330, 787, 849),
     ),
   ];
 
@@ -101,10 +104,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               minHeight: constraints.maxHeight,
                             ),
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.start,
                               children: [
+                                SizedBox(
+                                  height: (constraints.maxHeight * 0.04).clamp(
+                                    18.0,
+                                    32.0,
+                                  ),
+                                ),
                                 _buildIllustration(context, item),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 8),
                                 Text(
                                   item.title,
                                   textAlign: TextAlign.center,
@@ -209,18 +218,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   /// If the item has an icon, it renders the original card-based layout.
   Widget _buildIllustration(BuildContext context, OnboardingItem item) {
     if (item.imagePath != null) {
-      // Image-based slide: show image directly, centered and responsive
-      final availableWidth = MediaQuery.sizeOf(context).width - 48;
+      final screenSize = MediaQuery.sizeOf(context);
+      final imageWidth = (screenSize.width - 32).clamp(340.0, 390.0);
+      final imageHeight = (screenSize.height * 0.46).clamp(370.0, 430.0);
 
-      return ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: availableWidth,
-          maxHeight: availableWidth * 1.1,
-        ),
-        child: Image.asset(
-          item.imagePath!,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.high,
+      return SizedBox(
+        width: imageWidth,
+        height: imageHeight,
+        child: _CroppedOnboardingImage(
+          imagePath: item.imagePath!,
+          cropRect: item.cropRect!,
         ),
       );
     }
@@ -311,6 +318,7 @@ class OnboardingItem {
   final IconData? icon;
   final String? badgeText;
   final String? imagePath;
+  final Rect? cropRect;
 
   const OnboardingItem({
     required this.title,
@@ -318,5 +326,48 @@ class OnboardingItem {
     this.icon,
     this.badgeText,
     this.imagePath,
+    this.cropRect,
   });
+}
+
+class _CroppedOnboardingImage extends StatelessWidget {
+  final String imagePath;
+  final Rect cropRect;
+
+  const _CroppedOnboardingImage({
+    required this.imagePath,
+    required this.cropRect,
+  });
+
+  static const Size _sourceSize = Size(819, 1024);
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRect(
+      child: FittedBox(
+        fit: BoxFit.cover,
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: cropRect.width,
+          height: cropRect.height,
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              Positioned(
+                left: -cropRect.left,
+                top: -cropRect.top,
+                width: _sourceSize.width,
+                height: _sourceSize.height,
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.fill,
+                  filterQuality: FilterQuality.high,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

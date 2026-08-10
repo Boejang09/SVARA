@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/widgets/development_notice.dart';
+import 'package:svara_app/services/api_service.dart';
 import 'package:svara_app/widgets/mobile_wrapper.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -13,9 +13,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _usernameController = TextEditingController(text: 'guest');
+  final _usernameController = TextEditingController(text: 'tamu');
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -28,12 +29,38 @@ class _LoginScreenState extends State<LoginScreen> {
     AppRouter.toMain(context);
   }
 
-  void _showAuthDevelopmentMessage() {
-    showDevelopmentSnack(
-      context,
-      message:
-          'Sedang dalam tahap pengembangan. Backend user belum tersedia, jadi MVP memakai mode Guest.',
+  Future<void> _loginWithUsername() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      _showMessage('Nama pengguna dan kata sandi wajib diisi.');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final result = await ApiService.login(
+      username: username,
+      password: password,
     );
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result.isSuccess) {
+      AppRouter.toMain(context);
+    } else {
+      _showMessage(result.message ?? 'Login gagal.');
+    }
+  }
+
+  void _showForgotPasswordMessage() {
+    _showMessage('Pemulihan kata sandi belum diaktifkan untuk akun demo.');
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -70,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Username',
+                        'Nama Pengguna',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textDark,
@@ -82,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _usernameController,
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
-                          hintText: 'guest',
+                          hintText: 'tamu',
                           prefixIcon: Icon(
                             Icons.person_outline_rounded,
                             color: AppTheme.textMuted,
@@ -94,7 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Password',
+                            'Kata Sandi',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: AppTheme.textDark,
@@ -102,9 +129,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           TextButton(
-                            onPressed: _showAuthDevelopmentMessage,
+                            onPressed: _showForgotPasswordMessage,
                             child: const Text(
-                              'Lupa Password',
+                              'Lupa Kata Sandi',
                               style: TextStyle(
                                 color: AppTheme.primaryDarkTeal,
                                 fontSize: 13,
@@ -140,30 +167,34 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 28),
-                      const DevelopmentNotice(
-                        message:
-                            'Login username dan password mengikuti roadmap. Karena backend belum ada, akses MVP sementara menggunakan akun Guest.',
-                      ),
                       const SizedBox(height: 18),
                       SizedBox(
                         width: double.infinity,
                         height: 54,
                         child: ElevatedButton(
-                          onPressed: _showAuthDevelopmentMessage,
+                          onPressed: _isLoading ? null : _loginWithUsername,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey,
+                            backgroundColor: AppTheme.primaryDarkTeal,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(27),
                             ),
                           ),
-                          child: const Text(
-                            'Login dengan Username',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.4,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Masuk dengan Nama Pengguna',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -173,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Text(
-                              'OR',
+                              'ATAU',
                               style: TextStyle(
                                 color: Colors.grey.shade400,
                                 fontSize: 12,
@@ -206,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               SizedBox(width: 8),
                               Text(
-                                'Masuk sebagai Guest',
+                                'Masuk sebagai Tamu',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -229,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(color: AppTheme.textMuted),
                     ),
                     GestureDetector(
-                      onTap: _showAuthDevelopmentMessage,
+                      onTap: () => AppRouter.toRegister(context),
                       child: const Text(
                         'Daftar',
                         style: TextStyle(

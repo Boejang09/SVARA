@@ -48,7 +48,7 @@ class ScreeningStore {
     ),
   ];
 
-  static void addLatestResult() {
+  static void addLatestResult([String? audioPath]) {
     final now = DateTime.now();
     final id =
         'SV-${now.millisecondsSinceEpoch % 10000}-${String.fromCharCode(65 + now.second % 26)}';
@@ -62,6 +62,7 @@ class ScreeningStore {
         riskLevel: 'Risiko Rendah',
         isLowRisk: true,
         heartStatus: 'Normal',
+        audioPath: audioPath,
       ),
       ...records.value,
     ];

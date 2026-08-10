@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # Load environment variables dari file .env
@@ -31,4 +31,31 @@ def init_db():
 
     print("[DB] Membuat tabel database...")
     Base.metadata.create_all(bind=engine)
+    _ensure_runtime_columns()
     print("[DB] Semua tabel berhasil dibuat!")
+
+
+def _ensure_runtime_columns():
+    """Tambahkan kolom baru untuk database lama yang sudah pernah dibuat."""
+    inspector = inspect(engine)
+    if "skrinings" not in inspector.get_table_names():
+        return
+
+    existing = {column["name"] for column in inspector.get_columns("skrinings")}
+    required_columns = {
+        "confidence": "DOUBLE PRECISION",
+        "heart_status": "VARCHAR(120)",
+        "bpm_estimate": "INTEGER",
+        "recommendation": "TEXT",
+        "model_name": "VARCHAR(120)",
+        "model_version": "VARCHAR(80)",
+        "inference_ms": "INTEGER",
+        "raw_output": "TEXT",
+    }
+
+    with engine.begin() as conn:
+        for column_name, column_type in required_columns.items():
+            if column_name not in existing:
+                conn.execute(
+                    text(f"ALTER TABLE skrinings ADD COLUMN {column_name} {column_type}")
+                )

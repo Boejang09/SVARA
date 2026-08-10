@@ -27,8 +27,14 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # ── Routers ───────────────────────────────────
 from routers.record import router as record_router  # noqa: E402
+from routers.auth import router as auth_router  # noqa: E402
+from routers.predict import router as predict_router  # noqa: E402
+from routers.screening import router as screening_router  # noqa: E402
 
 app.include_router(record_router)
+app.include_router(auth_router)
+app.include_router(predict_router)
+app.include_router(screening_router)
 
 
 # ── Startup: auto-create semua tabel ──────────

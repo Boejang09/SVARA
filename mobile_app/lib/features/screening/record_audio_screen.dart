@@ -105,7 +105,7 @@ class _RecordAudioScreenState extends State<RecordAudioScreen>
       if (mounted) {
         if (result != null) {
           // Upload berhasil -> lanjut ke AI loading
-          AppRouter.toAiAnalysis(context);
+          AppRouter.toAiAnalysis(context, filePath);
         } else {
           // Upload gagal tapi file tersimpan lokal -> tetap lanjut
           // (nanti bisa retry upload)
@@ -117,7 +117,7 @@ class _RecordAudioScreenState extends State<RecordAudioScreen>
               backgroundColor: Colors.orange,
             ),
           );
-          AppRouter.toAiAnalysis(context);
+          AppRouter.toAiAnalysis(context, filePath);
         }
       }
     } else {
@@ -147,7 +147,8 @@ class _RecordAudioScreenState extends State<RecordAudioScreen>
             onPressed: () async {
               // Stop recording sebelum kembali
               await _recorderService.stopRecording();
-              if (mounted) Navigator.of(context).pop();
+              if (!context.mounted) return;
+              Navigator.of(context).pop();
             },
           ),
           title: const SvaraWordmark(markSize: 32, fontSize: 20),
@@ -159,7 +160,9 @@ class _RecordAudioScreenState extends State<RecordAudioScreen>
               children: [
                 const SizedBox(height: 8),
                 Text(
-                  _isRecording ? 'Sedang merekam suara...' : 'Memulai rekaman...',
+                  _isRecording
+                      ? 'Sedang merekam suara...'
+                      : 'Memulai rekaman...',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 20,
@@ -177,7 +180,10 @@ class _RecordAudioScreenState extends State<RecordAudioScreen>
                   const SizedBox(height: 8),
                   Text(
                     _errorMessage!,
-                    style: const TextStyle(fontSize: 13, color: Colors.redAccent),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.redAccent,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -331,7 +337,8 @@ class _RecordAudioScreenState extends State<RecordAudioScreen>
                       ? null
                       : () async {
                           await _recorderService.stopRecording();
-                          if (mounted) Navigator.of(context).pop();
+                          if (!context.mounted) return;
+                          Navigator.of(context).pop();
                         },
                   child: const Text(
                     'Batal',
