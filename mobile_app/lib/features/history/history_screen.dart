@@ -120,8 +120,9 @@ class _HistoryRecordCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screening = record['screening'] as Map<String, dynamic>?;
-    final riskLevel = (screening?['risk_analysis'] as num?)?.toDouble() ?? 0;
-    final isLowRisk = riskLevel > 80;
+    final rawRiskLevel = screening?['risk_analysis'];
+    final riskLevel = rawRiskLevel is num ? rawRiskLevel.toDouble() : null;
+    final isLowRisk = riskLevel != null && riskLevel > 80;
     final heartStatus = screening?['heart_status'] ?? 'Belum tersedia';
     final title = 'Pemeriksaan Vitalitas';
 
@@ -132,7 +133,9 @@ class _HistoryRecordCard extends StatelessWidget {
     } catch (_) {}
 
     final riskColor = isLowRisk ? AppTheme.primaryTeal : AppTheme.statusWarning;
-    final riskText = isLowRisk ? 'Risiko Rendah' : 'Risiko Tinggi';
+    final riskText = riskLevel == null
+        ? 'Menunggu Analisis'
+        : (isLowRisk ? 'Risiko Rendah' : 'Perlu Perhatian');
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -208,7 +211,9 @@ class _HistoryRecordCard extends StatelessWidget {
                 child: _MetricMini(
                   icon: Icons.air_rounded,
                   label: 'Status',
-                  value: isLowRisk ? 'Optimal' : 'Normal',
+                  value: riskLevel == null
+                      ? 'Diunggah'
+                      : (isLowRisk ? 'Optimal' : 'Perlu Perhatian'),
                 ),
               ),
             ],

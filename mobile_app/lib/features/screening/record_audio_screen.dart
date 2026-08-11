@@ -103,21 +103,20 @@ class _RecordAudioScreenState extends State<RecordAudioScreen>
       );
 
       if (mounted) {
-        if (result != null) {
-          // Upload berhasil -> lanjut ke AI loading
-          AppRouter.toAiAnalysis(context, filePath);
-        } else {
-          // Upload gagal tapi file tersimpan lokal -> tetap lanjut
-          // (nanti bisa retry upload)
+        if (result.isSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(
-                'Audio tersimpan lokal. Upload ke server gagal, akan dicoba lagi nanti.',
-              ),
-              backgroundColor: Colors.orange,
+              content: Text('Audio berhasil diunggah.'),
+              backgroundColor: AppTheme.primaryTeal,
             ),
           );
-          AppRouter.toAiAnalysis(context, filePath);
+          AppRouter.toAiAnalysis(context, result.data);
+        } else {
+          setState(() {
+            _isUploading = false;
+            _isRecording = false;
+            _errorMessage = result.message ?? 'Upload audio gagal.';
+          });
         }
       }
     } else {

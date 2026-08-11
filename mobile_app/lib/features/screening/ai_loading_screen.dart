@@ -2,13 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:svara_app/services/api_service.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
 class AILoadingScreen extends StatefulWidget {
-  final String? idRecord;
+  final Map<String, dynamic>? uploadData;
 
-  const AILoadingScreen({super.key, this.idRecord});
+  const AILoadingScreen({super.key, this.uploadData});
 
   @override
   State<AILoadingScreen> createState() => _AILoadingScreenState();
@@ -21,32 +20,27 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
   @override
   void initState() {
     super.initState();
-    _startPrediction();
+    _showUploadStatus();
   }
 
-  void _startPrediction() async {
-    if (widget.idRecord == null) {
-      if (mounted) AppRouter.toScreeningResult(context, null);
-      return;
-    }
-
+  void _showUploadStatus() {
     _progressTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (mounted) {
         setState(() {
-          if (_progressPercent < 95) _progressPercent += 1;
+          if (_progressPercent < 100) _progressPercent += 4;
         });
       }
     });
 
-    final result = await ApiService.predict(widget.idRecord!);
-    _progressTimer?.cancel();
-    
-    if (mounted) {
+    Future.delayed(const Duration(milliseconds: 900), () {
+      _progressTimer?.cancel();
+      if (!mounted) return;
       setState(() => _progressPercent = 100);
       Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) AppRouter.toScreeningResult(context, result);
+        if (!mounted) return;
+        AppRouter.toScreeningResult(context, widget.uploadData);
       });
-    }
+    });
   }
 
   @override
@@ -104,7 +98,7 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                     ),
                     child: const Center(
                       child: Icon(
-                        Icons.psychology_rounded,
+                        Icons.cloud_done_rounded,
                         size: 54,
                         color: AppTheme.primaryDarkTeal,
                       ),
@@ -113,24 +107,18 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                   Positioned(
                     top: 10,
                     right: 0,
-                    child: _buildBadge(
-                      Icons.favorite_outline_rounded,
-                      'BPM: Analisis',
-                    ),
+                    child: _buildBadge(Icons.cloud_upload_outlined, 'Upload'),
                   ),
                   Positioned(
                     bottom: 20,
                     left: 0,
-                    child: _buildBadge(
-                      Icons.monitor_heart_rounded,
-                      'Detak Jantung',
-                    ),
+                    child: _buildBadge(Icons.inventory_2_outlined, 'Tersimpan'),
                   ),
                 ],
               ),
               const SizedBox(height: 36),
               const Text(
-                'Menganalisis\nsuara jantung...',
+                'Menyimpan\nrekaman audio...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24,
@@ -141,7 +129,7 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Rekaman audio sedang diproses oleh model AI untuk menghasilkan hasil skrining Anda.',
+                'Rekaman audio sedang dikirim ke server SVARA dan dicatat untuk proses skrining berikutnya.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -152,15 +140,16 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
               const Spacer(),
               _buildInfoTile(
                 icon: Icons.check_circle_outline_rounded,
-                title: 'Analisis AI Aktif',
-                desc: 'Rekaman sedang dianalisis menggunakan model deep learning.',
+                title: 'Upload Berhasil',
+                desc: 'Audio sudah diterima oleh backend SVARA.',
                 color: AppTheme.primaryTeal,
               ),
               const SizedBox(height: 12),
               _buildInfoTile(
                 icon: Icons.security_rounded,
-                title: 'Data Tersimpan Aman',
-                desc: 'Rekaman dan hasil skrining disimpan dengan aman.',
+                title: 'Status Skrining',
+                desc:
+                    'Status awal disimpan sebagai uploaded tanpa hasil medis palsu.',
                 color: Colors.indigo,
               ),
               const SizedBox(height: 24),

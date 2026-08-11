@@ -1,4 +1,4 @@
-"""Router untuk skrining, riwayat, notifikasi, dan data dummy."""
+"""Router untuk skrining, riwayat, dan notifikasi."""
 from datetime import datetime
 from typing import Optional
 
@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import History, Notification, Record, Skrining, User
+from auth_utils import get_current_user
+from models import History, Notification, Skrining, User
 from schemas import (
     HistoryResponse,
     NotificationCreateRequest,
@@ -22,6 +23,7 @@ def _screening_response(skrining: Skrining) -> ScreeningResponse:
         id_skr=skrining.id_skr,
         id_user=skrining.id_user,
         id_record=skrining.id_record,
+        status=skrining.status,
         nama_penyakit=skrining.nama_penyakit,
         risk_analysis=skrining.risk_analysis,
         confidence=skrining.confidence,
@@ -41,10 +43,10 @@ def list_screenings(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     query = db.query(Skrining).order_by(Skrining.created_at.desc())
-    if id_user:
-        query = query.filter(Skrining.id_user == id_user)
+    query = query.filter(Skrining.id_user == (id_user or current_user.id_user))
 
     total = query.count()
     screenings = query.offset(offset).limit(limit).all()
@@ -87,10 +89,10 @@ def list_history(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     query = db.query(History).order_by(History.created_at.desc())
-    if id_user:
-        query = query.filter(History.id_user == id_user)
+    query = query.filter(History.id_user == (id_user or current_user.id_user))
 
     total = query.count()
     histories = query.offset(offset).limit(limit).all()
@@ -195,64 +197,4 @@ def mark_notification_read(notification_id: str, db: Session = Depends(get_db)):
     return {
         "message": "Notifikasi sudah dibaca",
         "data": NotificationResponse.model_validate(notification),
-    }
-
-
-@router.post("/api/dev/seed", response_model=dict)
-def seed_dummy_data(db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == "tamu").first()
-    if not user:
-        user = User(
-            username="tamu",
-            password_hash="$2b$12$CwTycUXWue0Thq9StjUM0uJ8.KSVwqdqkd1YAAxRbUJPZBPWmjNyC",
-            nama="Pengguna Tamu",
-            email="tamu@svara.local",
-            phone="+62 812 0000 0000",
-        )
-        db.add(user)
-        db.flush()
-
-    record = Record(
-        id_user=user.id_user,
-        nama="Contoh Rekaman Jantung",
-        file_path="uploads/audio/dummy-heart.wav",
-        file_format="wav",
-        duration_seconds=12.4,
-        file_size_bytes=248000,
-        sample_rate=16000,
-    )
-    db.add(record)
-    db.flush()
-
-    skrining = Skrining(
-        id_user=user.id_user,
-        id_record=record.id_suara,
-        nama_penyakit="Normal",
-        risk_analysis=92.0,
-        confidence=0.94,
-        heart_status="Normal",
-        bpm_estimate=72,
-        recommendation="Lanjutkan pemantauan rutin dan jaga pola hidup sehat.",
-        model_name="svara-dummy-heart-sound",
-        model_version="0.1.0",
-        inference_ms=18,
-    )
-    db.add(skrining)
-    db.flush()
-
-    db.add(History(id_user=user.id_user, id_skr=skrining.id_skr, id_record=record.id_suara))
-    db.add(Notification(
-        id_user=user.id_user,
-        id_skr=skrining.id_skr,
-        title="Data contoh siap",
-        message="Data dummy skrining berhasil dibuat untuk pengujian aplikasi.",
-        type="dev_seed",
-    ))
-    db.commit()
-
-    return {
-        "message": "Data dummy berhasil dibuat",
-        "user_id": user.id_user,
-        "record_id": record.id_suara,
-        "screening_id": skrining.id_skr,
     }

@@ -28,25 +28,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadData() async {
     try {
       final list = await ApiService.getScreenings();
+
       if (mounted) {
         setState(() {
           if (list != null && list.isNotEmpty) {
             final first = list.first;
-            _latestScreening = first is Map<String, dynamic> ? first : null;
+            _latestScreening =
+                first is Map<String, dynamic> ? first : null;
           } else {
             _latestScreening = null;
           }
+
           _hasError = list == null;
           _isLoading = false;
         });
       }
     } catch (_) {
       if (!mounted) return;
+
       setState(() {
         _latestScreening = null;
         _hasError = true;
         _isLoading = false;
       });
+    }
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+
+    if (hour < 12) {
+      return 'Selamat Pagi';
+    } else if (hour < 15) {
+      return 'Selamat Siang';
+    } else if (hour < 18) {
+      return 'Selamat Sore';
+    } else {
+      return 'Selamat Malam';
     }
   }
 
@@ -56,7 +74,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: AppTheme.bgMint,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const SvaraWordmark(markSize: 32, fontSize: 20),
+        title: const SvaraWordmark(
+          markSize: 32,
+          fontSize: 20,
+        ),
         actions: [
           IconButton(
             icon: const Icon(
@@ -65,7 +86,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const NotificationsScreen(),
+                ),
               );
             },
           ),
@@ -75,7 +98,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: _isLoading
           ? const DashboardSkeleton()
           : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -87,7 +113,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primaryTeal.withValues(alpha: 0.3),
+                          color: AppTheme.primaryTeal.withValues(
+                            alpha: 0.3,
+                          ),
                           blurRadius: 15,
                           offset: const Offset(0, 8),
                         ),
@@ -97,7 +125,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Selamat Pagi, ${ApiService.currentUser?['nama'] ?? 'Tamu'}',
+                          '${_getGreeting()}, '
+                          '${ApiService.currentUser?['nama'] ?? 'Tamu'}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -106,7 +135,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 6),
                         const Text(
-                          'Lakukan pemeriksaan jantung cepat\nselama 30 detik.',
+                          'Lakukan pemeriksaan jantung cepat\n'
+                          'selama 30 detik.',
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
@@ -118,16 +148,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           onPressed: widget.onStartScreening,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: AppTheme.primaryDarkTeal,
+                            foregroundColor:
+                                AppTheme.primaryDarkTeal,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 12,
                             ),
                           ),
-                          icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                          icon: const Icon(
+                            Icons.play_arrow_rounded,
+                            size: 20,
+                          ),
                           label: const Text(
                             'Mulai Sekarang',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -192,15 +228,22 @@ class _DashboardLatestContent extends StatelessWidget {
             Text(
               hasError
                   ? 'Beranda tetap tersedia meski koneksi API belum siap.'
-                  : 'Mulai pemeriksaan untuk melihat ringkasan kesehatan Anda.',
+                  : 'Mulai pemeriksaan untuk melihat ringkasan '
+                      'kesehatan Anda.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textMuted, height: 1.35),
+              style: const TextStyle(
+                color: AppTheme.textMuted,
+                height: 1.35,
+              ),
             ),
             if (hasError) ...[
               const SizedBox(height: 14),
               OutlinedButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded, size: 18),
+                icon: const Icon(
+                  Icons.refresh_rounded,
+                  size: 18,
+                ),
                 label: const Text('Coba Lagi'),
               ),
             ],
@@ -210,11 +253,17 @@ class _DashboardLatestContent extends StatelessWidget {
     }
 
     final rawSkor = data!['risk_analysis'];
-    final skor = rawSkor is num ? rawSkor.toInt().clamp(0, 100) : 0;
-    final status = (data!['heart_status'] as String?)?.trim();
-    final displayStatus = status == null || status.isEmpty
-        ? 'Belum tersedia'
-        : status;
+    final skor =
+        rawSkor is num ? rawSkor.toInt().clamp(0, 100) : 0;
+
+    final status =
+        (data!['heart_status'] as String?)?.trim();
+
+    final displayStatus =
+        status == null || status.isEmpty
+            ? 'Belum tersedia'
+            : status;
+
     final isLowRisk = skor > 80;
 
     return Column(
@@ -237,7 +286,9 @@ class _DashboardLatestContent extends StatelessWidget {
                 icon: Icons.air_rounded,
                 title: 'Kondisi',
                 value: rawSkor is num
-                    ? (isLowRisk ? 'Optimal' : 'Perlu Perhatian')
+                    ? (isLowRisk
+                        ? 'Optimal'
+                        : 'Perlu Perhatian')
                     : 'Belum tersedia',
               ),
             ),
@@ -263,12 +314,15 @@ class _DashboardLatestContent extends StatelessWidget {
                       width: 92,
                       height: 92,
                       child: CircularProgressIndicator(
-                        value: rawSkor is num ? skor / 100 : 0,
+                        value:
+                            rawSkor is num ? skor / 100 : 0,
                         strokeWidth: 8,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
+                        valueColor:
+                            const AlwaysStoppedAnimation<Color>(
                           AppTheme.primaryTeal,
                         ),
-                        backgroundColor: AppTheme.primaryLightTeal,
+                        backgroundColor:
+                            AppTheme.primaryLightTeal,
                       ),
                     ),
                     Column(
@@ -298,7 +352,8 @@ class _DashboardLatestContent extends StatelessWidget {
               const SizedBox(width: 18),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'Skor Risiko',
@@ -311,9 +366,12 @@ class _DashboardLatestContent extends StatelessWidget {
                     Text(
                       rawSkor is num
                           ? (isLowRisk
-                                ? 'Risiko rendah berdasarkan data skrining terbaru.'
-                                : 'Ditemukan indikasi risiko. Disarankan konsultasi medis.')
-                          : 'Belum tersedia dari hasil skrining terbaru.',
+                              ? 'Risiko rendah berdasarkan data '
+                                  'skrining terbaru.'
+                              : 'Ditemukan indikasi risiko. '
+                                  'Disarankan konsultasi medis.')
+                          : 'Belum tersedia dari hasil skrining '
+                              'terbaru.',
                       style: const TextStyle(
                         fontSize: 13,
                         color: AppTheme.textMuted,
@@ -368,7 +426,10 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             title,
-            style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+            style: const TextStyle(
+              color: AppTheme.textMuted,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
@@ -398,7 +459,11 @@ class _IconBadge extends StatelessWidget {
         color: AppTheme.primaryLightTeal,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(icon, color: AppTheme.primaryDarkTeal, size: 22),
+      child: Icon(
+        icon,
+        color: AppTheme.primaryDarkTeal,
+        size: 22,
+      ),
     );
   }
 }

@@ -1,13 +1,15 @@
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service untuk komunikasi dengan SVARA Backend API.
 class ApiService {
-  // Untuk Android emulator, gunakan 10.0.2.2
-  // Untuk device fisik di jaringan lokal, gunakan IP komputer (contoh: 192.168.1.140)
-  // Untuk iOS simulator atau Desktop Windows, gunakan 127.0.0.1
-  static const String _baseUrl = 'http://192.168.1.140:8000';
+  static const String _baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://192.168.0.104:8000',
+  );
   static String? accessToken;
   static Map<String, dynamic>? currentUser;
 
@@ -24,7 +26,10 @@ class ApiService {
     }
   }
 
-  static Future<void> _saveSession(String? token, Map<String, dynamic>? user) async {
+  static Future<void> _saveSession(
+    String? token,
+    Map<String, dynamic>? user,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       if (token != null) {
@@ -70,11 +75,9 @@ class ApiService {
         return const ApiResult.success();
       }
 
-      return ApiResult.failure(_errorMessage(body, 'Login gagal'));
-    } catch (_) {
-      return const ApiResult.failure(
-        'Tidak dapat terhubung ke backend. Pastikan server SVARA API aktif.',
-      );
+      return ApiResult.failure(_errorMessage(response, body, 'Login gagal.'));
+    } catch (error) {
+      return ApiResult.failure(_networkErrorMessage(error));
     }
   }
 
@@ -109,20 +112,18 @@ class ApiService {
         return const ApiResult.success();
       }
 
-      return ApiResult.failure(_errorMessage(body, 'Registrasi gagal'));
-    } catch (_) {
-      return const ApiResult.failure(
-        'Tidak dapat terhubung ke backend. Pastikan server SVARA API aktif.',
+      return ApiResult.failure(
+        _errorMessage(response, body, 'Registrasi gagal.'),
       );
+    } catch (error) {
+      return ApiResult.failure(_networkErrorMessage(error));
     }
   }
 
   /// Upload file audio ke backend.
-  /// Return id_suara jika berhasil, null jika gagal.
-  static Future<String?> uploadAudio({
+  static Future<ApiResult> uploadAudio({
     required String filePath,
     String nama = 'Rekaman Suara',
-    String? idUser,
   }) async {
     try {
       final uri = Uri.parse('$_baseUrl/api/records/upload');
@@ -137,9 +138,6 @@ class ApiService {
 
       // Tambah fields
       request.fields['nama'] = nama;
-      if (idUser != null) {
-        request.fields['id_user'] = idUser;
-      }
 
       final streamedResponse = await request.send().timeout(
         const Duration(seconds: 30),
@@ -147,18 +145,20 @@ class ApiService {
 
       final response = await http.Response.fromStream(streamedResponse);
 
-      if (response.statusCode == 200) {
-        final body = _decodeBody(response.body);
-        return body?['data']?['id_suara'] as String?;
-      } else {
-        return null;
+      final body = _decodeBody(response.body);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return ApiResult.success(data: body);
       }
-    } catch (e) {
-      return null;
+
+      return ApiResult.failure(
+        _errorMessage(response, body, 'Upload audio gagal.'),
+      );
+    } catch (error) {
+      return ApiResult.failure(_networkErrorMessage(error));
     }
   }
 
-  /// Panggil AI backend untuk memproses rekaman suara.
+  /// Endpoint prediksi disimpan untuk Phase 3. Phase 2 tidak memanggilnya.
   static Future<Map<String, dynamic>?> predict(String idRecord) async {
     try {
       final response = await http
@@ -173,7 +173,8 @@ class ApiService {
           .timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 200) {
-        return _decodeBody(response.body);
+        final body = _decodeBody(response.body);
+        return body;
       }
       return null;
     } catch (_) {
@@ -229,7 +230,7 @@ class ApiService {
   static Future<bool> checkConnection() async {
     try {
       final response = await http
-          .get(Uri.parse(_baseUrl))
+          .get(Uri.parse('$_baseUrl/health'))
           .timeout(const Duration(seconds: 5));
       return response.statusCode == 200;
     } catch (_) {
@@ -247,20 +248,47 @@ class ApiService {
     return null;
   }
 
-  static String _errorMessage(Map<String, dynamic>? body, String fallback) {
+  static String _errorMessage(
+    http.Response response,
+    Map<String, dynamic>? body,
+    String fallback,
+  ) {
     final detail = body?['detail'];
     if (detail is String && detail.isNotEmpty) return detail;
-    return fallback;
+    if (detail is List && detail.isNotEmpty) {
+      return 'Data yang dikirim tidak valid.';
+    }
+    return switch (response.statusCode) {
+      401 => 'Sesi login telah berakhir. Silakan login kembali.',
+      403 => 'Akses ditolak.',
+      404 => 'Endpoint server tidak ditemukan.',
+      409 => fallback,
+      422 => 'Data yang dikirim tidak valid.',
+      >= 500 => 'Terjadi masalah pada server.',
+      _ => fallback,
+    };
+  }
+
+  static String _networkErrorMessage(Object error) {
+    if (error is TimeoutException) {
+      return 'Koneksi ke server terlalu lama. Silakan coba lagi.';
+    }
+    if (error is SocketException || error is http.ClientException) {
+      return 'Server SVARA belum dapat dihubungi.';
+    }
+    return 'Terjadi kesalahan koneksi.';
   }
 }
 
 class ApiResult {
   final bool isSuccess;
   final String? message;
+  final Map<String, dynamic>? data;
 
-  const ApiResult._({required this.isSuccess, this.message});
+  const ApiResult._({required this.isSuccess, this.message, this.data});
 
-  const ApiResult.success() : this._(isSuccess: true);
+  const ApiResult.success({Map<String, dynamic>? data})
+    : this._(isSuccess: true, data: data);
 
   const ApiResult.failure(String message)
     : this._(isSuccess: false, message: message);

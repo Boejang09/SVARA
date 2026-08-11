@@ -35,6 +35,9 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
   Widget build(BuildContext context) {
     final data = widget.resultData;
     final bool hasData = data != null;
+    final String uploadStatus = _readText(data?['status']);
+    final String uploadStatusLabel = _statusLabel(uploadStatus);
+    final String screeningId = _readText(data?['screening_id']);
     final rawSkor = hasData ? data['risk_analysis'] : null;
     final int? skor = rawSkor is num
         ? rawSkor.toInt().clamp(0, 100).toInt()
@@ -108,7 +111,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Skrining Selesai',
+                'Audio Diterima',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -117,7 +120,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Berikut adalah hasil analisis suara jantung Anda berdasarkan model AI.',
+                'Rekaman audio berhasil disimpan di server. Hasil analisis medis akan tersedia pada fase berikutnya.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13.5,
@@ -153,14 +156,14 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Tingkat Keyakinan AI',
+                              'Status Rekaman',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: AppTheme.textMuted,
                               ),
                             ),
                             Text(
-                              'Skor Risiko',
+                              'Menunggu Analisis',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
@@ -180,9 +183,9 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                         color: AppTheme.primaryTeal,
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Text(
-                        'Pratinjau',
-                        style: TextStyle(
+                      child: Text(
+                        uploadStatusLabel,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -232,8 +235,10 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                     ),
                     const SizedBox(height: 14),
                     _buildRecommendationItem(
-                      title: 'Hasil AI',
-                      desc: rekomendasi,
+                      title: 'Status Upload',
+                      desc: screeningId == 'Belum tersedia.'
+                          ? rekomendasi
+                          : 'ID skrining: $screeningId. Rekaman siap diproses pada fase analisis berikutnya.',
                     ),
                   ],
                 ),
@@ -323,6 +328,16 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
   String _readText(Object? value) {
     if (value is String && value.trim().isNotEmpty) return value.trim();
     return 'Belum tersedia.';
+  }
+
+  String _statusLabel(String status) {
+    return switch (status.toLowerCase()) {
+      'uploaded' => 'Diunggah',
+      'processing' => 'Sedang diproses',
+      'completed' => 'Selesai',
+      'failed' => 'Gagal',
+      _ => 'Diunggah',
+    };
   }
 
   Widget _buildMetricCard({

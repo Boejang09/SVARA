@@ -31,11 +31,15 @@ abstract final class AppRouter {
       ),
       AppRoutes.recordAudio => _page(const RecordAudioScreen(), settings),
       AppRoutes.aiLoading => _page(
-        AILoadingScreen(idRecord: settings.arguments as String?),
+        AILoadingScreen(
+          uploadData: settings.arguments as Map<String, dynamic>?,
+        ),
         settings,
       ),
       AppRoutes.screeningResult => _page(
-        ScreeningResultScreen(resultData: settings.arguments as Map<String, dynamic>?),
+        ScreeningResultScreen(
+          resultData: settings.arguments as Map<String, dynamic>?,
+        ),
         settings,
       ),
       AppRoutes.notifications => _page(const NotificationsScreen(), settings),
@@ -82,18 +86,22 @@ abstract final class AppRouter {
     Navigator.of(context).pushNamed(AppRoutes.recordAudio);
   }
 
-  static void toAiAnalysis(BuildContext context, [String? idRecord]) {
-    Navigator.of(context).pushReplacementNamed(
-      AppRoutes.aiLoading,
-      arguments: idRecord,
-    );
+  static void toAiAnalysis(
+    BuildContext context, [
+    Map<String, dynamic>? uploadData,
+  ]) {
+    Navigator.of(
+      context,
+    ).pushReplacementNamed(AppRoutes.aiLoading, arguments: uploadData);
   }
 
-  static void toScreeningResult(BuildContext context, [Map<String, dynamic>? resultData]) {
-    Navigator.of(context).pushReplacementNamed(
-      AppRoutes.screeningResult,
-      arguments: resultData,
-    );
+  static void toScreeningResult(
+    BuildContext context, [
+    Map<String, dynamic>? resultData,
+  ]) {
+    Navigator.of(
+      context,
+    ).pushReplacementNamed(AppRoutes.screeningResult, arguments: resultData);
   }
 
   static void finishScreeningToHome(BuildContext context) {

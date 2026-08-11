@@ -7,9 +7,11 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 # Load environment variables dari file .env
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:admin@localhost:5432/svara_db")
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL belum dikonfigurasi. Isi backend/.env terlebih dahulu.")
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=os.getenv("SQLALCHEMY_ECHO", "false").lower() == "true")
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -44,6 +46,7 @@ def _ensure_runtime_columns():
     existing = {column["name"] for column in inspector.get_columns("skrinings")}
     required_columns = {
         "confidence": "DOUBLE PRECISION",
+        "status": "VARCHAR(40) NOT NULL DEFAULT 'uploaded'",
         "heart_status": "VARCHAR(120)",
         "bpm_estimate": "INTEGER",
         "recommendation": "TEXT",

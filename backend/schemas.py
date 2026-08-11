@@ -72,6 +72,7 @@ class ScreeningResponse(BaseModel):
     id_skr: str
     id_user: Optional[str] = None
     id_record: Optional[str] = None
+    status: Optional[str] = None
     nama_penyakit: Optional[str] = None
     risk_analysis: Optional[float] = None
     confidence: Optional[float] = None
@@ -122,3 +123,10 @@ class NotificationCreateRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=160)
     message: str = Field(..., min_length=1)
     type: str = Field(default="info", max_length=40)
+
+
+class UploadAudioResponse(BaseModel):
+    message: str
+    screening_id: str
+    record_id: str
+    status: str

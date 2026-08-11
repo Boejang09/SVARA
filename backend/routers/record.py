@@ -5,17 +5,25 @@ Upload, list, detail, dan hapus rekaman audio.
 import os
 import uuid
 import wave
-from datetime import datetime
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from auth_utils import get_current_user
 from database import get_db
-from models import Record
+from models import History, Record, Skrining, User
+from schemas import UploadAudioResponse
 
 router = APIRouter(prefix="/api/records", tags=["Records"])
 
 UPLOAD_DIR = "uploads/audio"
+ALLOWED_EXTENSIONS = {".wav"}
+ALLOWED_CONTENT_TYPES = {
+    "audio/wav",
+    "audio/x-wav",
+    "audio/wave",
+    "application/octet-stream",
+}
 
 
 def _get_wav_metadata(file_path: str) -> dict:
@@ -54,42 +62,69 @@ def _get_audio_metadata(file_path: str, file_format: str) -> dict:
 # ──────────────────────────────────────────────
 # POST /api/records/upload  —  Upload file audio
 # ──────────────────────────────────────────────
-@router.post("/upload")
+def _validate_wav_file(file: UploadFile):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Format audio tidak valid. Gunakan file WAV.",
+        )
+
+    if file.content_type and file.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Tipe konten audio tidak valid. Gunakan file WAV.",
+        )
+
+
+def _assert_phase2_wav(metadata: dict):
+    if metadata["sample_rate"] is not None and metadata["sample_rate"] != 44100:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Sample rate audio harus 44.1 kHz.",
+        )
+
+
+@router.post(
+    "/upload",
+    response_model=UploadAudioResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def upload_audio(
     file: UploadFile = File(...),
     nama: str = Form(default="Rekaman Suara"),
-    id_user: str = Form(default=None),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-    # Validasi tipe file
-    allowed_types = ["audio/wav", "audio/x-wav", "audio/wave", "audio/m4a",
-                     "audio/mp4", "audio/mpeg", "audio/x-m4a",
-                     "application/octet-stream"]
-    if file.content_type and file.content_type not in allowed_types:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Format file tidak didukung: {file.content_type}. Gunakan WAV atau M4A.",
-        )
+    _validate_wav_file(file)
 
     # Generate unique filename
-    ext = os.path.splitext(file.filename or "audio.wav")[1] or ".wav"
-    file_format = ext.lstrip(".").lower()
+    ext = ".wav"
+    file_format = "wav"
     unique_name = f"{uuid.uuid4().hex}{ext}"
     file_path = os.path.join(UPLOAD_DIR, unique_name)
 
     # Simpan file
     content = await file.read()
     file_size = len(content)
+    if file_size == 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="File audio kosong.",
+        )
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
     with open(file_path, "wb") as f:
         f.write(content)
 
     # Ambil metadata audio
     metadata = _get_audio_metadata(file_path, file_format)
+    _assert_phase2_wav(metadata)
 
     # Simpan ke database
     record = Record(
         nama=nama,
-        id_user=id_user,
+        id_user=current_user.id_user,
         file_path=file_path,
         file_format=file_format,
         duration_seconds=metadata["duration_seconds"],
@@ -97,22 +132,33 @@ async def upload_audio(
         sample_rate=metadata["sample_rate"],
     )
     db.add(record)
+    db.flush()
+
+    skrining = Skrining(
+        id_user=current_user.id_user,
+        id_record=record.id_suara,
+        status="uploaded",
+    )
+    db.add(skrining)
+    db.flush()
+
+    db.add(
+        History(
+            id_user=current_user.id_user,
+            id_skr=skrining.id_skr,
+            id_record=record.id_suara,
+        )
+    )
     db.commit()
     db.refresh(record)
+    db.refresh(skrining)
 
-    return {
-        "message": "Audio berhasil diupload",
-        "data": {
-            "id_suara": record.id_suara,
-            "nama": record.nama,
-            "file_path": record.file_path,
-            "file_format": record.file_format,
-            "duration_seconds": record.duration_seconds,
-            "file_size_bytes": record.file_size_bytes,
-            "sample_rate": record.sample_rate,
-            "created_at": record.created_at.isoformat() if record.created_at else None,
-        },
-    }
+    return UploadAudioResponse(
+        message="Audio berhasil diunggah",
+        screening_id=skrining.id_skr,
+        record_id=record.id_suara,
+        status=skrining.status,
+    )
 
 
 # ──────────────────────────────────────────────

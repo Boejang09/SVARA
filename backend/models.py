@@ -84,6 +84,7 @@ class Skrining(Base):
     id_skr = Column(String, primary_key=True, default=_gen_uuid)
     id_user = Column(String, ForeignKey("users.id_user"), nullable=True)
     id_record = Column(String, ForeignKey("records.id_suara"), nullable=True)
+    status = Column(String(40), nullable=False, default="uploaded")
     nama_penyakit = Column(String(255), nullable=True)
     risk_analysis = Column(Float, nullable=True)  # 0.0 - 100.0
     confidence = Column(Float, nullable=True)
@@ -135,8 +136,8 @@ class MLPredictionJob(Base):
     id_user = Column(String, ForeignKey("users.id_user"), nullable=True)
     id_record = Column(String, ForeignKey("records.id_suara"), nullable=False)
     id_skr = Column(String, ForeignKey("skrinings.id_skr"), nullable=True)
-    status = Column(String(40), nullable=False, default="completed")
-    provider = Column(String(80), nullable=False, default="dummy")
+    status = Column(String(40), nullable=False, default="pending")
+    provider = Column(String(80), nullable=True)
     model_name = Column(String(120), nullable=True)
     model_version = Column(String(80), nullable=True)
     error_message = Column(Text, nullable=True)

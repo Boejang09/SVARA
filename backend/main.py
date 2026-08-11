@@ -28,12 +28,10 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 # ── Routers ───────────────────────────────────
 from routers.record import router as record_router  # noqa: E402
 from routers.auth import router as auth_router  # noqa: E402
-from routers.predict import router as predict_router  # noqa: E402
 from routers.screening import router as screening_router  # noqa: E402
 
 app.include_router(record_router)
 app.include_router(auth_router)
-app.include_router(predict_router)
 app.include_router(screening_router)
 
 
@@ -58,3 +56,11 @@ def read_root(db: Session = Depends(get_db)):
             "error": str(e),
         }
 
+
+@app.get("/health")
+def health(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "ok", "database": "connected"}
+    except Exception as e:
+        return {"status": "error", "database": "disconnected", "detail": str(e)}
