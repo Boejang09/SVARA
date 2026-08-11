@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:svara_app/core/router/app_routes.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
 import 'package:svara_app/features/notifications/notifications_screen.dart';
+import 'package:svara_app/services/api_service.dart';
 import 'package:svara_app/widgets/skeleton/skeleton.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -100,9 +102,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ],
                           ),
                           const SizedBox(height: 14),
-                          const Text(
-                            'Tamu',
-                            style: TextStyle(
+                          Text(
+                            ApiService.currentUser?['nama'] ?? 'Tamu',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -167,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                       SizedBox(height: 2),
                                       Text(
-                                        'Mock',
+                                        'Belum ada',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: 20,
@@ -186,14 +188,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 24),
                     _buildSettingsGroup(
                       title: 'Pengaturan Akun',
-                      items: const [
-                        _SettingItem(
+                      items: [
+                        const _SettingItem(
                           icon: Icons.person_outline_rounded,
                           title: 'Informasi Pribadi',
                         ),
-                        _SettingItem(
+                        const _SettingItem(
                           icon: Icons.history_rounded,
                           title: 'Riwayat Medis',
+                        ),
+                        _SettingItem(
+                          icon: Icons.logout_rounded,
+                          title: 'Keluar',
+                          onTap: _logout,
                         ),
                       ],
                     ),
@@ -263,55 +270,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+
+  void _logout() async {
+    await ApiService.logout();
+    if (mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        AppRoutes.login,
+        (route) => false,
+      );
+    }
+  }
 }
 
 class _SettingItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
+  final VoidCallback? onTap;
 
-  const _SettingItem({required this.icon, required this.title, this.subtitle});
+  const _SettingItem({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppTheme.primaryLightTeal,
-              borderRadius: BorderRadius.circular(14),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryLightTeal,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: AppTheme.primaryDarkTeal, size: 22),
             ),
-            child: Icon(icon, color: AppTheme.primaryDarkTeal, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: AppTheme.textDark,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (subtitle != null)
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    subtitle!,
+                    title,
                     style: const TextStyle(
-                      color: AppTheme.textMuted,
-                      fontSize: 12,
+                      color: AppTheme.textDark,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-              ],
+                  if (subtitle != null)
+                    Text(
+                      subtitle!,
+                      style: const TextStyle(
+                        color: AppTheme.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
-        ],
+            const Icon(Icons.chevron_right_rounded, color: AppTheme.textMuted),
+          ],
+        ),
       ),
     );
   }

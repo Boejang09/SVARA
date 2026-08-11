@@ -3,7 +3,7 @@ import 'package:svara_app/main.dart';
 
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const SvaraApp());
+    await tester.pumpWidget(const SvaraApp(initialRoute: '/onboarding'));
     expect(find.byType(SvaraApp), findsOneWidget);
   });
 }

@@ -35,6 +35,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'Dapatkan penilaian risiko jantung\nberbasis AI dan rekomendasi\nkesehatan yang dipersonalisasi.',
       imagePath: 'assets/images/onboarding_risk_assessment.png',
       cropRect: Rect.fromLTRB(33, 330, 787, 849),
+      showFullImage: true,
     ),
   ];
 
@@ -94,6 +95,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     final item = _items[index];
                     return LayoutBuilder(
                       builder: (context, constraints) {
+                        final isCompact = constraints.maxHeight < 620;
+                        final topGap = (constraints.maxHeight * 0.018).clamp(
+                          8.0,
+                          18.0,
+                        );
+                        final illustrationHeight =
+                            (constraints.maxHeight * (isCompact ? 0.52 : 0.56))
+                                .clamp(250.0, 380.0);
                         return SingleChildScrollView(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 24,
@@ -106,14 +115,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
-                                SizedBox(
-                                  height: (constraints.maxHeight * 0.04).clamp(
-                                    18.0,
-                                    32.0,
-                                  ),
+                                SizedBox(height: topGap),
+                                _buildIllustration(
+                                  context,
+                                  item,
+                                  height: illustrationHeight,
                                 ),
-                                _buildIllustration(context, item),
-                                const SizedBox(height: 8),
+                                SizedBox(height: isCompact ? 6 : 10),
                                 Text(
                                   item.title,
                                   textAlign: TextAlign.center,
@@ -216,18 +224,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   /// Builds the illustration area for each onboarding slide.
   /// If the item has an imagePath, it renders the image directly (no card/box).
   /// If the item has an icon, it renders the original card-based layout.
-  Widget _buildIllustration(BuildContext context, OnboardingItem item) {
+  Widget _buildIllustration(
+    BuildContext context,
+    OnboardingItem item, {
+    required double height,
+  }) {
     if (item.imagePath != null) {
       final screenSize = MediaQuery.sizeOf(context);
-      final imageWidth = (screenSize.width - 32).clamp(340.0, 390.0);
-      final imageHeight = (screenSize.height * 0.46).clamp(370.0, 430.0);
+      final imageWidth = (screenSize.width - 48).clamp(280.0, 390.0);
 
       return SizedBox(
         width: imageWidth,
-        height: imageHeight,
+        height: height,
         child: _CroppedOnboardingImage(
           imagePath: item.imagePath!,
           cropRect: item.cropRect!,
+          showFullImage: item.showFullImage,
         ),
       );
     }
@@ -319,6 +331,7 @@ class OnboardingItem {
   final String? badgeText;
   final String? imagePath;
   final Rect? cropRect;
+  final bool showFullImage;
 
   const OnboardingItem({
     required this.title,
@@ -327,25 +340,36 @@ class OnboardingItem {
     this.badgeText,
     this.imagePath,
     this.cropRect,
+    this.showFullImage = false,
   });
 }
 
 class _CroppedOnboardingImage extends StatelessWidget {
   final String imagePath;
   final Rect cropRect;
+  final bool showFullImage;
 
   const _CroppedOnboardingImage({
     required this.imagePath,
     required this.cropRect,
+    required this.showFullImage,
   });
 
   static const Size _sourceSize = Size(819, 1024);
 
   @override
   Widget build(BuildContext context) {
+    if (showFullImage) {
+      return Image.asset(
+        imagePath,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.high,
+      );
+    }
+
     return ClipRect(
       child: FittedBox(
-        fit: BoxFit.cover,
+        fit: BoxFit.contain,
         alignment: Alignment.center,
         child: SizedBox(
           width: cropRect.width,

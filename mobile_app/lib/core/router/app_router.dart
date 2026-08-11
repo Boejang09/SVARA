@@ -31,11 +31,11 @@ abstract final class AppRouter {
       ),
       AppRoutes.recordAudio => _page(const RecordAudioScreen(), settings),
       AppRoutes.aiLoading => _page(
-        AILoadingScreen(audioPath: settings.arguments as String?),
+        AILoadingScreen(idRecord: settings.arguments as String?),
         settings,
       ),
       AppRoutes.screeningResult => _page(
-        ScreeningResultScreen(audioPath: settings.arguments as String?),
+        ScreeningResultScreen(resultData: settings.arguments as Map<String, dynamic>?),
         settings,
       ),
       AppRoutes.notifications => _page(const NotificationsScreen(), settings),
@@ -82,17 +82,17 @@ abstract final class AppRouter {
     Navigator.of(context).pushNamed(AppRoutes.recordAudio);
   }
 
-  static void toAiAnalysis(BuildContext context, [String? audioPath]) {
+  static void toAiAnalysis(BuildContext context, [String? idRecord]) {
     Navigator.of(context).pushReplacementNamed(
       AppRoutes.aiLoading,
-      arguments: audioPath,
+      arguments: idRecord,
     );
   }
 
-  static void toScreeningResult(BuildContext context, [String? audioPath]) {
+  static void toScreeningResult(BuildContext context, [Map<String, dynamic>? resultData]) {
     Navigator.of(context).pushReplacementNamed(
       AppRoutes.screeningResult,
-      arguments: audioPath,
+      arguments: resultData,
     );
   }
 

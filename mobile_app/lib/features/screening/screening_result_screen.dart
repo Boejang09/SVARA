@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:svara_app/core/mock/screening_store.dart';
 import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
 import 'package:svara_app/widgets/development_notice.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
 class ScreeningResultScreen extends StatefulWidget {
-  final String? audioPath;
+  final Map<String, dynamic>? resultData;
 
-  const ScreeningResultScreen({super.key, this.audioPath});
+  const ScreeningResultScreen({super.key, this.resultData});
 
   @override
   State<ScreeningResultScreen> createState() => _ScreeningResultScreenState();
@@ -19,7 +18,6 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
 
   void _saveResult() {
     if (_saved) return;
-    ScreeningStore.addLatestResult(widget.audioPath);
     _saved = true;
   }
 
@@ -35,6 +33,21 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final data = widget.resultData;
+    final bool hasData = data != null;
+    final rawSkor = hasData ? data['risk_analysis'] : null;
+    final int? skor = rawSkor is num
+        ? rawSkor.toInt().clamp(0, 100).toInt()
+        : null;
+    final String status = _readText(data?['heart_status']);
+    final rawBpm = hasData ? data['bpm_estimate'] : null;
+    final int? bpm = rawBpm is num ? rawBpm.toInt() : null;
+    final String rekomendasi = _readText(data?['recommendation']);
+    final rawConfidence = hasData ? data['confidence'] : null;
+    final double confidence = rawConfidence is num
+        ? rawConfidence.toDouble().clamp(0.0, 1.0)
+        : 0.0;
+
     return Scaffold(
       backgroundColor: AppTheme.bgMint,
       appBar: AppBar(
@@ -62,7 +75,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                     width: 170,
                     height: 170,
                     child: CircularProgressIndicator(
-                      value: 0.92,
+                      value: skor == null ? 0 : skor / 100,
                       strokeWidth: 14,
                       backgroundColor: Colors.grey.shade200,
                       valueColor: const AlwaysStoppedAnimation<Color>(
@@ -70,20 +83,20 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                       ),
                     ),
                   ),
-                  const Column(
+                  Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '92',
-                        style: TextStyle(
+                        skor == null ? '-' : '$skor',
+                        style: const TextStyle(
                           fontSize: 44,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textDark,
                         ),
                       ),
                       Text(
-                        'Risiko Rendah',
-                        style: TextStyle(
+                        status,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.primaryTeal,
@@ -95,7 +108,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Skrining Selesai - Pratinjau',
+                'Skrining Selesai',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -104,7 +117,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Hasil ini menggunakan data contoh untuk mendemokan alur MVP sampai model ML tersedia.',
+                'Berikut adalah hasil analisis suara jantung Anda berdasarkan model AI.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13.5,
@@ -140,14 +153,14 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Kepercayaan AI',
+                              'Tingkat Keyakinan AI',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: AppTheme.textMuted,
                               ),
                             ),
                             Text(
-                              'Contoh Skor Risiko',
+                              'Skor Risiko',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
@@ -168,7 +181,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Text(
-                        'Preview',
+                        'Pratinjau',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 11,
@@ -184,9 +197,9 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                 icon: Icons.favorite_rounded,
                 iconColor: Colors.redAccent,
                 title: 'Analisis Jantung',
-                val: 'Normal',
-                subText: '72 BPM Rata-rata',
-                progress: 0.75,
+                val: status,
+                subText: bpm == null ? 'Belum tersedia.' : 'Estimasi $bpm BPM',
+                progress: confidence,
               ),
               const SizedBox(height: 20),
               Container(
@@ -203,7 +216,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Rekomendasi Klinis',
+                          'Rekomendasi Kesehatan',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -219,15 +232,8 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                     ),
                     const SizedBox(height: 14),
                     _buildRecommendationItem(
-                      title: 'Lanjutkan pemantauan rutin',
-                      desc:
-                          'Kondisi jantung Anda stabil. Skrining berikutnya disarankan dalam 7 hari.',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildRecommendationItem(
-                      title: 'Optimasi Hidrasi',
-                      desc:
-                          'Variabilitas detak jantung terdeteksi ringan; tingkatkan asupan air sebelum skrining berikutnya.',
+                      title: 'Hasil AI',
+                      desc: rekomendasi,
                     ),
                   ],
                 ),
@@ -312,6 +318,11 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
         ),
       ),
     );
+  }
+
+  String _readText(Object? value) {
+    if (value is String && value.trim().isNotEmpty) return value.trim();
+    return 'Belum tersedia.';
   }
 
   Widget _buildMetricCard({

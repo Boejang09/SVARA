@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:svara_app/core/mock/screening_record.dart';
-import 'package:svara_app/core/mock/screening_store.dart';
+import 'package:intl/intl.dart';
+import 'package:svara_app/services/api_service.dart';
 import 'package:svara_app/core/router/app_routes.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:svara_app/widgets/skeleton/skeleton.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -16,6 +15,7 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   bool _isLoading = true;
+  List<dynamic> _histories = [];
 
   @override
   void initState() {
@@ -24,8 +24,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _loadData() async {
-    await simulateLoading();
-    if (mounted) setState(() => _isLoading = false);
+    final data = await ApiService.getHistory();
+    if (mounted) {
+      setState(() {
+        _histories = data ?? [];
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -77,21 +82,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ValueListenableBuilder<List<ScreeningRecord>>(
-                      valueListenable: ScreeningStore.records,
-                      builder: (context, records, _) {
-                        return Column(
-                          children: records
-                              .map(
-                                (record) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: _HistoryRecordCard(record: record),
-                                ),
-                              )
-                              .toList(),
-                        );
-                      },
-                    ),
+                    if (_histories.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 40),
+                          child: Text(
+                            'Belum ada riwayat skrining.',
+                            style: TextStyle(color: AppTheme.textMuted),
+                          ),
+                        ),
+                      )
+                    else
+                      Column(
+                        children: _histories
+                            .map(
+                              (record) => Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _HistoryRecordCard(record: record),
+                              ),
+                            )
+                            .toList(),
+                      ),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -101,46 +112,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 }
 
-class _HistoryRecordCard extends StatefulWidget {
-  final ScreeningRecord record;
+class _HistoryRecordCard extends StatelessWidget {
+  final Map<String, dynamic> record;
 
   const _HistoryRecordCard({required this.record});
 
   @override
-  State<_HistoryRecordCard> createState() => _HistoryRecordCardState();
-}
-
-class _HistoryRecordCardState extends State<_HistoryRecordCard> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  bool _isPlaying = false;
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
-  void _togglePlay() async {
-    if (widget.record.audioPath == null) return;
-    
-    if (_isPlaying) {
-      await _audioPlayer.pause();
-      setState(() => _isPlaying = false);
-    } else {
-      await _audioPlayer.play(DeviceFileSource(widget.record.audioPath!));
-      setState(() => _isPlaying = true);
-      
-      _audioPlayer.onPlayerComplete.listen((event) {
-        if (mounted) setState(() => _isPlaying = false);
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final riskColor = widget.record.isLowRisk
-        ? AppTheme.primaryTeal
-        : AppTheme.statusWarning;
+    final screening = record['screening'] as Map<String, dynamic>?;
+    final riskLevel = (screening?['risk_analysis'] as num?)?.toDouble() ?? 0;
+    final isLowRisk = riskLevel > 80;
+    final heartStatus = screening?['heart_status'] ?? 'Belum tersedia';
+    final title = 'Pemeriksaan Vitalitas';
+
+    String formattedDate = '';
+    try {
+      final dt = DateTime.parse(record['created_at']);
+      formattedDate = DateFormat('dd MMM yyyy • HH:mm').format(dt);
+    } catch (_) {}
+
+    final riskColor = isLowRisk ? AppTheme.primaryTeal : AppTheme.statusWarning;
+    final riskText = isLowRisk ? 'Risiko Rendah' : 'Risiko Tinggi';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -155,7 +147,7 @@ class _HistoryRecordCardState extends State<_HistoryRecordCard> {
             children: [
               Expanded(
                 child: Text(
-                  widget.record.formattedDate,
+                  formattedDate,
                   style: const TextStyle(
                     color: AppTheme.textMuted,
                     fontSize: 12,
@@ -173,9 +165,9 @@ class _HistoryRecordCardState extends State<_HistoryRecordCard> {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  widget.record.riskLevel,
+                  riskText,
                   style: TextStyle(
-                    color: widget.record.isLowRisk
+                    color: isLowRisk
                         ? AppTheme.primaryDarkTeal
                         : Colors.orange.shade900,
                     fontSize: 11,
@@ -191,7 +183,7 @@ class _HistoryRecordCardState extends State<_HistoryRecordCard> {
             children: [
               Expanded(
                 child: Text(
-                  widget.record.title,
+                  title,
                   style: const TextStyle(
                     color: AppTheme.textDark,
                     fontSize: 17,
@@ -199,15 +191,6 @@ class _HistoryRecordCardState extends State<_HistoryRecordCard> {
                   ),
                 ),
               ),
-              if (widget.record.audioPath != null)
-                IconButton(
-                  icon: Icon(
-                    _isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
-                    color: AppTheme.primaryTeal,
-                    size: 32,
-                  ),
-                  onPressed: _togglePlay,
-                ),
             ],
           ),
           const SizedBox(height: 14),
@@ -217,22 +200,22 @@ class _HistoryRecordCardState extends State<_HistoryRecordCard> {
                 child: _MetricMini(
                   icon: Icons.favorite_border_rounded,
                   label: 'Jantung',
-                  value: widget.record.heartStatus,
+                  value: heartStatus,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _MetricMini(
                   icon: Icons.air_rounded,
-                  label: '',
-                  value: widget.record.isLowRisk ? 'Optimal' : 'Normal',
+                  label: 'Status',
+                  value: isLowRisk ? 'Optimal' : 'Normal',
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            widget.record.idText,
+            'ID: ${record['id_skr'] ?? '-'}',
             style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
           ),
         ],

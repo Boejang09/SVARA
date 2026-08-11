@@ -1,6 +1,6 @@
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service untuk komunikasi dengan SVARA Backend API.
 class ApiService {
@@ -10,6 +10,43 @@ class ApiService {
   static const String _baseUrl = 'http://192.168.1.140:8000';
   static String? accessToken;
   static Map<String, dynamic>? currentUser;
+
+  static Future<void> loadSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      accessToken = prefs.getString('access_token');
+      final userStr = prefs.getString('current_user');
+      if (userStr != null) {
+        currentUser = jsonDecode(userStr);
+      }
+    } catch (_) {
+      // Abaikan jika gagal
+    }
+  }
+
+  static Future<void> _saveSession(String? token, Map<String, dynamic>? user) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (token != null) {
+        await prefs.setString('access_token', token);
+        accessToken = token;
+      }
+      if (user != null) {
+        await prefs.setString('current_user', jsonEncode(user));
+        currentUser = user;
+      }
+    } catch (_) {}
+  }
+
+  static Future<void> logout() async {
+    try {
+      accessToken = null;
+      currentUser = null;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('access_token');
+      await prefs.remove('current_user');
+    } catch (_) {}
+  }
 
   static Future<ApiResult> login({
     required String username,
@@ -26,8 +63,10 @@ class ApiService {
 
       final body = _decodeBody(response.body);
       if (response.statusCode == 200) {
-        accessToken = body?['access_token'] as String?;
-        currentUser = body?['user'] as Map<String, dynamic>?;
+        await _saveSession(
+          body?['access_token'] as String?,
+          body?['user'] as Map<String, dynamic>?,
+        );
         return const ApiResult.success();
       }
 
@@ -63,8 +102,10 @@ class ApiService {
 
       final body = _decodeBody(response.body);
       if (response.statusCode == 201) {
-        accessToken = body?['access_token'] as String?;
-        currentUser = body?['user'] as Map<String, dynamic>?;
+        await _saveSession(
+          body?['access_token'] as String?,
+          body?['user'] as Map<String, dynamic>?,
+        );
         return const ApiResult.success();
       }
 
@@ -77,7 +118,7 @@ class ApiService {
   }
 
   /// Upload file audio ke backend.
-  /// Return response body jika berhasil, null jika gagal.
+  /// Return id_suara jika berhasil, null jika gagal.
   static Future<String?> uploadAudio({
     required String filePath,
     String nama = 'Rekaman Suara',
@@ -87,6 +128,9 @@ class ApiService {
       final uri = Uri.parse('$_baseUrl/api/records/upload');
 
       final request = http.MultipartRequest('POST', uri);
+      if (accessToken != null) {
+        request.headers['Authorization'] = 'Bearer $accessToken';
+      }
 
       // Tambah file
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
@@ -104,11 +148,79 @@ class ApiService {
       final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
-        return response.body;
+        final body = _decodeBody(response.body);
+        return body?['data']?['id_suara'] as String?;
       } else {
         return null;
       }
     } catch (e) {
+      return null;
+    }
+  }
+
+  /// Panggil AI backend untuk memproses rekaman suara.
+  static Future<Map<String, dynamic>?> predict(String idRecord) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/api/predict/'),
+            headers: {
+              'Content-Type': 'application/json',
+              if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+            },
+            body: jsonEncode({'id_record': idRecord}),
+          )
+          .timeout(const Duration(seconds: 45));
+
+      if (response.statusCode == 200) {
+        return _decodeBody(response.body);
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Fetch daftar riwayat dari backend
+  static Future<List<dynamic>?> getHistory() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$_baseUrl/api/history/'),
+            headers: {
+              if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final body = _decodeBody(response.body);
+        return body?['data'] as List<dynamic>?;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Fetch daftar skrining dari backend
+  static Future<List<dynamic>?> getScreenings() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$_baseUrl/api/screenings/'),
+            headers: {
+              if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final body = _decodeBody(response.body);
+        return body?['data'] as List<dynamic>?;
+      }
+      return null;
+    } catch (_) {
       return null;
     }
   }

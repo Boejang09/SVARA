@@ -16,6 +16,8 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
+  bool _hasError = false;
+  Map<String, dynamic>? _latestScreening;
 
   @override
   void initState() {
@@ -24,8 +26,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadData() async {
-    await simulateLoading();
-    if (mounted) setState(() => _isLoading = false);
+    try {
+      final list = await ApiService.getScreenings();
+      if (mounted) {
+        setState(() {
+          if (list != null && list.isNotEmpty) {
+            final first = list.first;
+            _latestScreening = first is Map<String, dynamic> ? first : null;
+          } else {
+            _latestScreening = null;
+          }
+          _hasError = list == null;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _latestScreening = null;
+        _hasError = true;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -112,7 +134,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const _DashboardMockContent(),
+                  _DashboardLatestContent(
+                    data: _latestScreening,
+                    hasError: _hasError,
+                    onRetry: _loadData,
+                  ),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -121,31 +147,98 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _DashboardMockContent extends StatelessWidget {
-  const _DashboardMockContent();
+class _DashboardLatestContent extends StatelessWidget {
+  final Map<String, dynamic>? data;
+  final bool hasError;
+  final VoidCallback onRetry;
+
+  const _DashboardLatestContent({
+    this.data,
+    required this.hasError,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (data == null) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              hasError
+                  ? Icons.wifi_off_rounded
+                  : Icons.health_and_safety_outlined,
+              color: AppTheme.primaryTeal,
+              size: 34,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              hasError
+                  ? 'Data belum dapat dimuat. Silakan coba lagi.'
+                  : 'Belum ada hasil skrining.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppTheme.textDark,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              hasError
+                  ? 'Beranda tetap tersedia meski koneksi API belum siap.'
+                  : 'Mulai pemeriksaan untuk melihat ringkasan kesehatan Anda.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppTheme.textMuted, height: 1.35),
+            ),
+            if (hasError) ...[
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Coba Lagi'),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    final rawSkor = data!['risk_analysis'];
+    final skor = rawSkor is num ? rawSkor.toInt().clamp(0, 100) : 0;
+    final status = (data!['heart_status'] as String?)?.trim();
+    final displayStatus = status == null || status.isEmpty
+        ? 'Belum tersedia'
+        : status;
+    final isLowRisk = skor > 80;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionTitle('Ringkasan Kesehatan'),
         const SizedBox(height: 12),
         Row(
-          children: const [
+          children: [
             Expanded(
               child: _SummaryCard(
                 icon: Icons.favorite_border_rounded,
                 title: 'Status Jantung',
-                value: 'Normal',
+                value: displayStatus,
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: _SummaryCard(
                 icon: Icons.air_rounded,
-                title: 'Status',
-                value: 'Optimal',
+                title: 'Kondisi',
+                value: rawSkor is num
+                    ? (isLowRisk ? 'Optimal' : 'Perlu Perhatian')
+                    : 'Belum tersedia',
               ),
             ),
           ],
@@ -166,13 +259,13 @@ class _DashboardMockContent extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    const SizedBox(
+                    SizedBox(
                       width: 92,
                       height: 92,
                       child: CircularProgressIndicator(
-                        value: 0.85,
+                        value: rawSkor is num ? skor / 100 : 0,
                         strokeWidth: 8,
-                        valueColor: AlwaysStoppedAnimation<Color>(
+                        valueColor: const AlwaysStoppedAnimation<Color>(
                           AppTheme.primaryTeal,
                         ),
                         backgroundColor: AppTheme.primaryLightTeal,
@@ -180,16 +273,16 @@ class _DashboardMockContent extends StatelessWidget {
                     ),
                     Column(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Text(
-                          '85',
-                          style: TextStyle(
+                          rawSkor is num ? '$skor' : '-',
+                          style: const TextStyle(
                             color: AppTheme.primaryDarkTeal,
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Text(
+                        const Text(
                           '/100',
                           style: TextStyle(
                             color: AppTheme.textMuted,
@@ -203,11 +296,11 @@ class _DashboardMockContent extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 18),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Skor Risiko',
                       style: TextStyle(
                         color: AppTheme.textDark,
@@ -215,58 +308,19 @@ class _DashboardMockContent extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 4),
                     Text(
-                      'Risiko rendah berdasarkan data screening contoh.',
-                      style: TextStyle(
-                        color: AppTheme.textMuted,
+                      rawSkor is num
+                          ? (isLowRisk
+                                ? 'Risiko rendah berdasarkan data skrining terbaru.'
+                                : 'Ditemukan indikasi risiko. Disarankan konsultasi medis.')
+                          : 'Belum tersedia dari hasil skrining terbaru.',
+                      style: const TextStyle(
                         fontSize: 13,
+                        color: AppTheme.textMuted,
                         height: 1.35,
                       ),
                     ),
                   ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        _sectionTitle('Skrining Terbaru'),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Row(
-            children: [
-              _IconBadge(icon: Icons.mic_rounded),
-              SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Pemeriksaan Vitalitas',
-                      style: TextStyle(
-                        color: AppTheme.textDark,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      '24 Okt 2023 • 09:15',
-                      style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                'Optimal',
-                style: TextStyle(
-                  color: AppTheme.primaryDarkTeal,
-                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],

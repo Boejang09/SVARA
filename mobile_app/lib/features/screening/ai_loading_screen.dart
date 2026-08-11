@@ -2,12 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
+import 'package:svara_app/services/api_service.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
 class AILoadingScreen extends StatefulWidget {
-  final String? audioPath;
+  final String? idRecord;
 
-  const AILoadingScreen({super.key, this.audioPath});
+  const AILoadingScreen({super.key, this.idRecord});
 
   @override
   State<AILoadingScreen> createState() => _AILoadingScreenState();
@@ -20,28 +21,32 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
   @override
   void initState() {
     super.initState();
-    _startProgressAnimation();
+    _startPrediction();
   }
 
-  void _startProgressAnimation() {
-    _progressTimer = Timer.periodic(const Duration(milliseconds: 60), (timer) {
+  void _startPrediction() async {
+    if (widget.idRecord == null) {
+      if (mounted) AppRouter.toScreeningResult(context, null);
+      return;
+    }
+
+    _progressTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (mounted) {
         setState(() {
-          if (_progressPercent < 100) {
-            _progressPercent += 2;
-          } else {
-            _progressTimer?.cancel();
-            _navigateToResults();
-          }
+          if (_progressPercent < 95) _progressPercent += 1;
         });
       }
     });
-  }
 
-  void _navigateToResults() {
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) AppRouter.toScreeningResult(context, widget.audioPath);
-    });
+    final result = await ApiService.predict(widget.idRecord!);
+    _progressTimer?.cancel();
+    
+    if (mounted) {
+      setState(() => _progressPercent = 100);
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) AppRouter.toScreeningResult(context, result);
+      });
+    }
   }
 
   @override
@@ -125,7 +130,7 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
               ),
               const SizedBox(height: 36),
               const Text(
-                'Menyiapkan hasil\nscreening contoh...',
+                'Menganalisis\nsuara jantung...',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24,
@@ -136,7 +141,7 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Flow ini mengikuti roadmap Record Audio ke AI ke Risk Score, tetapi analisis ML belum berjalan.',
+                'Rekaman audio sedang diproses oleh model AI untuk menghasilkan hasil skrining Anda.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -147,15 +152,15 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
               const Spacer(),
               _buildInfoTile(
                 icon: Icons.check_circle_outline_rounded,
-                title: 'Mode Simulasi MVP',
-                desc: 'Belum terhubung ke model ML atau backend prediksi.',
+                title: 'Analisis AI Aktif',
+                desc: 'Rekaman sedang dianalisis menggunakan model deep learning.',
                 color: AppTheme.primaryTeal,
               ),
               const SizedBox(height: 12),
               _buildInfoTile(
                 icon: Icons.security_rounded,
-                title: 'Data Lokal Sementara',
-                desc: 'Penyimpanan cloud/database belum aktif di MVP frontend.',
+                title: 'Data Tersimpan Aman',
+                desc: 'Rekaman dan hasil skrining disimpan dengan aman.',
                 color: Colors.indigo,
               ),
               const SizedBox(height: 24),

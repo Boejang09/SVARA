@@ -103,7 +103,7 @@ class SvaraBottomNavBar extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: 'Scan',
+      label: 'Pindai',
       child: GestureDetector(
         onTap: () => onTap(2),
         child: SizedBox(
