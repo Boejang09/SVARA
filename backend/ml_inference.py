@@ -1,49 +1,85 @@
-"""Adapter inference ML untuk SVARA.
+"""Adapter API ML eksternal untuk analisis rekaman SVARA."""
+import os
+from dataclasses import dataclass
+from typing import Any
 
-Saat model asli sudah tersedia, cukup ganti isi run_prediction().
-Kontrak response dict di file ini dipakai router, database, history, dan notifikasi.
-"""
 import requests
+from dotenv import load_dotenv
 
-def run_prediction(file_path: str, file_format: str) -> dict:
-    """
-    Jalankan inference audio jantung dengan memanggil API deep learning eksternal.
-    """
-    url = "https://visiting-mustard-cleat.ngrok-free.dev/predict"
-    
+load_dotenv()
+
+DEFAULT_ML_TIMEOUT_SECONDS = 45
+
+
+class MLInferenceError(Exception):
+    """Error terkontrol saat komunikasi atau validasi response ML gagal."""
+
+
+@dataclass(frozen=True)
+class MLResult:
+    filename: str | None
+    prediction: str
+    segment_details: list[str]
+    status: str
+    raw_response: dict[str, Any]
+
+
+def _ml_api_url() -> str:
+    url = os.getenv("ML_API_URL", "").strip()
+    if not url:
+        raise MLInferenceError("ML_API_URL belum dikonfigurasi.")
+    return url
+
+
+def run_prediction(file_path: str, file_format: str = "wav") -> MLResult:
+    """Kirim audio ke API ML dan validasi response inti."""
+    if not os.path.exists(file_path):
+        raise MLInferenceError("File audio tidak ditemukan.")
+
+    timeout = int(os.getenv("ML_API_TIMEOUT_SECONDS", str(DEFAULT_ML_TIMEOUT_SECONDS)))
+    filename = os.path.basename(file_path)
+    content_type = "audio/wav" if file_format.lower() == "wav" else "application/octet-stream"
+
     try:
-        with open(file_path, "rb") as f:
-            files = {"audio": (file_path.split("/")[-1] if "/" in file_path else file_path.split("\\")[-1], f, f"audio/{file_format}")}
-            response = requests.post(url, files=files)
-            response.raise_for_status()
-            data = response.json()
-            
-            prediction_label = data.get("prediction", "Unknown")
-            
-            # Map API response to backend requirements
-            result = {
-                "nama_penyakit": prediction_label,
-                "risk_analysis": 10.0 if prediction_label == "Normal" else 85.0,
-                "confidence": 0.95,
-                "heart_status": prediction_label,
-                "bpm_estimate": 80,
-                "recommendation": f"Status: {prediction_label}."
-            }
-            
-            if prediction_label != "Normal":
-                result["recommendation"] += " Disarankan konsultasi ke dokter."
-            else:
-                result["recommendation"] += " Kondisi jantung Anda normal."
-                
-            return result
-    except Exception as e:
-        print(f"Error calling ML API: {e}")
-        # Fallback in case of error
-        return {
-            "nama_penyakit": "Error",
-            "risk_analysis": 0.0,
-            "confidence": 0.0,
-            "heart_status": "Gagal Menganalisa",
-            "bpm_estimate": 0,
-            "recommendation": "Terjadi kesalahan saat menghubungi server AI."
-        }
+        with open(file_path, "rb") as audio_file:
+            response = requests.post(
+                _ml_api_url(),
+                files={"audio": (filename, audio_file, content_type)},
+                timeout=timeout,
+            )
+    except requests.Timeout as exc:
+        raise MLInferenceError("Koneksi ke layanan ML terlalu lama.") from exc
+    except requests.RequestException as exc:
+        raise MLInferenceError("Layanan ML belum dapat dihubungi.") from exc
+
+    if response.status_code >= 400:
+        raise MLInferenceError(f"Layanan ML mengembalikan status {response.status_code}.")
+
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise MLInferenceError("Response ML bukan JSON yang valid.") from exc
+
+    prediction = data.get("prediction")
+    if not isinstance(prediction, str) or not prediction.strip():
+        raise MLInferenceError("Response ML tidak memiliki field prediction.")
+
+    segment_details = data.get("segment_details")
+    if not isinstance(segment_details, list) or not all(
+        isinstance(item, str) for item in segment_details
+    ):
+        raise MLInferenceError("Response ML tidak memiliki segment_details yang valid.")
+
+    status = data.get("status")
+    if not isinstance(status, str) or not status.strip():
+        raise MLInferenceError("Response ML tidak memiliki status yang valid.")
+    if status.strip().lower() != "success":
+        raise MLInferenceError("Layanan ML belum berhasil menganalisis audio.")
+
+    return MLResult(
+        filename=data.get("filename") if isinstance(data.get("filename"), str) else filename,
+        prediction=prediction.strip(),
+        segment_details=segment_details,
+        status=status.strip(),
+        raw_response=data,
+    )

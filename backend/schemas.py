@@ -82,6 +82,7 @@ class ScreeningResponse(BaseModel):
     model_name: Optional[str] = None
     model_version: Optional[str] = None
     inference_ms: Optional[int] = None
+    raw_output: Optional[dict[str, Any]] = None
     created_at: Optional[datetime] = None
 
     class Config:
@@ -95,6 +96,7 @@ class HistoryResponse(BaseModel):
     id_record: Optional[str] = None
     tanggal: Optional[datetime] = None
     created_at: Optional[datetime] = None
+    audio_url: Optional[str] = None
     # Include screening data when joined
     screening: Optional[ScreeningResponse] = None
 
@@ -130,3 +132,8 @@ class UploadAudioResponse(BaseModel):
     screening_id: str
     record_id: str
     status: str
+
+
+class AnalyzeScreeningResponse(BaseModel):
+    message: str
+    data: ScreeningResponse

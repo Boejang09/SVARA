@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:svara_app/core/router/app_router.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
+import 'package:svara_app/services/api_service.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
 class AILoadingScreen extends StatefulWidget {
@@ -16,31 +17,55 @@ class AILoadingScreen extends StatefulWidget {
 class _AILoadingScreenState extends State<AILoadingScreen> {
   int _progressPercent = 0;
   Timer? _progressTimer;
+  bool _isAnalyzing = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _showUploadStatus();
+    _startAnalysis();
   }
 
-  void _showUploadStatus() {
+  Future<void> _startAnalysis() async {
+    final screeningId = widget.uploadData?['screening_id'] as String?;
+    if (screeningId == null || screeningId.isEmpty) {
+      setState(() {
+        _isAnalyzing = false;
+        _errorMessage = 'Data skrining belum tersedia.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isAnalyzing = true;
+      _errorMessage = null;
+      _progressPercent = 0;
+    });
+
     _progressTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (mounted) {
         setState(() {
-          if (_progressPercent < 100) _progressPercent += 4;
+          if (_progressPercent < 92) _progressPercent += 1;
         });
       }
     });
 
-    Future.delayed(const Duration(milliseconds: 900), () {
-      _progressTimer?.cancel();
-      if (!mounted) return;
+    final result = await ApiService.analyzeScreening(screeningId);
+    _progressTimer?.cancel();
+    if (!mounted) return;
+
+    if (result.isSuccess) {
       setState(() => _progressPercent = 100);
       Future.delayed(const Duration(milliseconds: 300), () {
         if (!mounted) return;
-        AppRouter.toScreeningResult(context, widget.uploadData);
+        AppRouter.toScreeningResult(context, result.data);
       });
-    });
+    } else {
+      setState(() {
+        _isAnalyzing = false;
+        _errorMessage = result.message ?? 'Analisis rekaman gagal.';
+      });
+    }
   }
 
   @override
@@ -98,7 +123,7 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                     ),
                     child: const Center(
                       child: Icon(
-                        Icons.cloud_done_rounded,
+                        Icons.psychology_rounded,
                         size: 54,
                         color: AppTheme.primaryDarkTeal,
                       ),
@@ -112,13 +137,15 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                   Positioned(
                     bottom: 20,
                     left: 0,
-                    child: _buildBadge(Icons.inventory_2_outlined, 'Tersimpan'),
+                    child: _buildBadge(Icons.monitor_heart_rounded, 'Analisis'),
                   ),
                 ],
               ),
               const SizedBox(height: 36),
-              const Text(
-                'Menyimpan\nrekaman audio...',
+              Text(
+                _errorMessage == null
+                    ? 'Menganalisis\nrekaman audio...'
+                    : 'Analisis\ngagal',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24,
@@ -128,8 +155,9 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Rekaman audio sedang dikirim ke server SVARA dan dicatat untuk proses skrining berikutnya.',
+              Text(
+                _errorMessage ??
+                    'Rekaman audio sedang dianalisis oleh layanan ML melalui backend SVARA.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -140,27 +168,45 @@ class _AILoadingScreenState extends State<AILoadingScreen> {
               const Spacer(),
               _buildInfoTile(
                 icon: Icons.check_circle_outline_rounded,
-                title: 'Upload Berhasil',
-                desc: 'Audio sudah diterima oleh backend SVARA.',
+                title: 'Audio Tersimpan',
+                desc: 'Rekaman sudah diterima oleh backend SVARA.',
                 color: AppTheme.primaryTeal,
               ),
               const SizedBox(height: 12),
               _buildInfoTile(
                 icon: Icons.security_rounded,
-                title: 'Status Skrining',
-                desc:
-                    'Status awal disimpan sebagai uploaded tanpa hasil medis palsu.',
+                title: _errorMessage == null
+                    ? 'Sedang Dianalisis'
+                    : 'Analisis Belum Selesai',
+                desc: _errorMessage == null
+                    ? 'Backend SVARA sedang menunggu response dari layanan ML.'
+                    : 'Tidak ada hasil palsu yang ditampilkan.',
                 color: Colors.indigo,
               ),
               const SizedBox(height: 24),
-              Text(
-                '$_progressPercent%',
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryDarkTeal,
+              if (_errorMessage == null)
+                Text(
+                  '$_progressPercent%',
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryDarkTeal,
+                  ),
+                )
+              else
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: _isAnalyzing ? null : _startAnalysis,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Coba Lagi'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryTeal,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
               const SizedBox(height: 16),
             ],
           ),

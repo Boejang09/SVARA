@@ -37,12 +37,16 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
     final bool hasData = data != null;
     final String uploadStatus = _readText(data?['status']);
     final String uploadStatusLabel = _statusLabel(uploadStatus);
-    final String screeningId = _readText(data?['screening_id']);
+    final String screeningId = _readText(
+      data?['screening_id'] ?? data?['id_skr'],
+    );
     final rawSkor = hasData ? data['risk_analysis'] : null;
     final int? skor = rawSkor is num
         ? rawSkor.toInt().clamp(0, 100).toInt()
         : null;
-    final String status = _readText(data?['heart_status']);
+    final String prediction = _readText(
+      data?['heart_status'] ?? data?['nama_penyakit'],
+    );
     final rawBpm = hasData ? data['bpm_estimate'] : null;
     final int? bpm = rawBpm is num ? rawBpm.toInt() : null;
     final String rekomendasi = _readText(data?['recommendation']);
@@ -50,6 +54,9 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
     final double confidence = rawConfidence is num
         ? rawConfidence.toDouble().clamp(0.0, 1.0)
         : 0.0;
+    final segments = _segmentDetails(data?['raw_output']);
+    final isCompleted = uploadStatus == 'completed';
+    final isFailed = uploadStatus == 'failed';
 
     return Scaffold(
       backgroundColor: AppTheme.bgMint,
@@ -98,7 +105,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                         ),
                       ),
                       Text(
-                        status,
+                        prediction,
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -110,8 +117,10 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Audio Diterima',
+              Text(
+                isCompleted
+                    ? 'Analisis Selesai'
+                    : (isFailed ? 'Analisis Gagal' : 'Menunggu Analisis'),
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -119,8 +128,12 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Rekaman audio berhasil disimpan di server. Hasil analisis medis akan tersedia pada fase berikutnya.',
+              Text(
+                isCompleted
+                    ? 'Berikut hasil analisis rekaman dari model ML eksternal.'
+                    : (isFailed
+                          ? 'Gagal menganalisis rekaman. Silakan coba lagi dari riwayat atau buat rekaman baru.'
+                          : 'Rekaman audio berhasil disimpan. Hasil analisis belum tersedia.'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13.5,
@@ -152,19 +165,19 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                           ),
                         ),
                         const SizedBox(width: 14),
-                        const Column(
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Status Rekaman',
-                              style: TextStyle(
+                              isCompleted ? 'Hasil Analisis' : 'Status Rekaman',
+                              style: const TextStyle(
                                 fontSize: 13,
                                 color: AppTheme.textMuted,
                               ),
                             ),
                             Text(
-                              'Menunggu Analisis',
-                              style: TextStyle(
+                              isCompleted ? 'Model ML' : 'Menunggu Analisis',
+                              style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.primaryDarkTeal,
@@ -200,7 +213,7 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                 icon: Icons.favorite_rounded,
                 iconColor: Colors.redAccent,
                 title: 'Analisis Jantung',
-                val: status,
+                val: prediction,
                 subText: bpm == null ? 'Belum tersedia.' : 'Estimasi $bpm BPM',
                 progress: confidence,
               ),
@@ -235,11 +248,20 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
                     ),
                     const SizedBox(height: 14),
                     _buildRecommendationItem(
-                      title: 'Status Upload',
-                      desc: screeningId == 'Belum tersedia.'
-                          ? rekomendasi
-                          : 'ID skrining: $screeningId. Rekaman siap diproses pada fase analisis berikutnya.',
+                      title: isCompleted ? 'Hasil Model' : 'Status Skrining',
+                      desc: isCompleted
+                          ? 'Hasil analisis: $prediction.'
+                          : (screeningId == 'Belum tersedia.'
+                                ? rekomendasi
+                                : 'ID skrining: $screeningId. $rekomendasi'),
                     ),
+                    if (segments.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _buildRecommendationItem(
+                        title: 'Detail Segmen',
+                        desc: segments.join(', '),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -338,6 +360,19 @@ class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
       'failed' => 'Gagal',
       _ => 'Diunggah',
     };
+  }
+
+  List<String> _segmentDetails(Object? rawOutput) {
+    if (rawOutput is Map) {
+      final segments = rawOutput['segment_details'];
+      if (segments is List) {
+        return segments
+            .whereType<String>()
+            .where((item) => item.trim().isNotEmpty)
+            .toList();
+      }
+    }
+    return const [];
   }
 
   Widget _buildMetricCard({

@@ -1,4 +1,7 @@
 """Router untuk skrining, riwayat, dan notifikasi."""
+import json
+import os
+import time
 from datetime import datetime
 from typing import Optional
 
@@ -7,8 +10,10 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from auth_utils import get_current_user
-from models import History, Notification, Skrining, User
+from ml_inference import MLInferenceError, run_prediction
+from models import History, MLPredictionJob, Notification, Record, Skrining, User
 from schemas import (
+    AnalyzeScreeningResponse,
     HistoryResponse,
     NotificationCreateRequest,
     NotificationResponse,
@@ -33,8 +38,15 @@ def _screening_response(skrining: Skrining) -> ScreeningResponse:
         model_name=skrining.model_name,
         model_version=skrining.model_version,
         inference_ms=skrining.inference_ms,
+        raw_output=json.loads(skrining.raw_output) if skrining.raw_output else None,
         created_at=skrining.created_at,
     )
+
+
+def _audio_url(record: Record | None) -> str | None:
+    if not record or not record.file_path:
+        return None
+    return f"/uploads/audio/{os.path.basename(record.file_path)}"
 
 
 @router.get("/api/screenings/", response_model=dict)
@@ -59,14 +71,108 @@ def list_screenings(
 
 
 @router.get("/api/screenings/{screening_id}", response_model=dict)
-def get_screening(screening_id: str, db: Session = Depends(get_db)):
+def get_screening(
+    screening_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     skrining = db.query(Skrining).filter(Skrining.id_skr == screening_id).first()
-    if not skrining:
+    if not skrining or skrining.id_user != current_user.id_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Skrining tidak ditemukan",
         )
     return {"data": _screening_response(skrining)}
+
+
+@router.post(
+    "/api/screenings/{screening_id}/analyze",
+    response_model=AnalyzeScreeningResponse,
+)
+def analyze_screening(
+    screening_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    skrining = db.query(Skrining).filter(Skrining.id_skr == screening_id).first()
+    if not skrining or skrining.id_user != current_user.id_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Skrining tidak ditemukan",
+        )
+
+    record = db.query(Record).filter(Record.id_suara == skrining.id_record).first()
+    if not record or not os.path.exists(record.file_path):
+        skrining.status = "failed"
+        skrining.recommendation = "File audio tidak ditemukan."
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File audio tidak ditemukan.",
+        )
+
+    skrining.status = "processing"
+    job = MLPredictionJob(
+        id_user=current_user.id_user,
+        id_record=record.id_suara,
+        id_skr=skrining.id_skr,
+        status="processing",
+        provider="external_ml_api",
+        model_name="external-heart-sound-api",
+    )
+    db.add(job)
+    db.commit()
+
+    started = time.perf_counter()
+    try:
+        result = run_prediction(record.file_path, record.file_format)
+    except MLInferenceError as exc:
+        skrining.status = "failed"
+        skrining.recommendation = str(exc)
+        job.status = "failed"
+        job.error_message = str(exc)
+        job.finished_at = datetime.utcnow()
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Gagal menganalisis rekaman. Silakan coba lagi.",
+        ) from exc
+
+    inference_ms = int((time.perf_counter() - started) * 1000)
+    raw_output = {
+        **result.raw_response,
+        "filename": result.filename,
+        "prediction": result.prediction,
+        "segment_details": result.segment_details,
+        "status": result.status,
+    }
+
+    skrining.status = "completed"
+    skrining.nama_penyakit = result.prediction
+    skrining.heart_status = result.prediction
+    skrining.recommendation = "Hasil berasal dari model ML eksternal."
+    skrining.model_name = "external-heart-sound-api"
+    skrining.model_version = None
+    skrining.inference_ms = inference_ms
+    skrining.raw_output = json.dumps(raw_output)
+    job.status = "completed"
+    job.finished_at = datetime.utcnow()
+    db.add(
+        Notification(
+            id_user=current_user.id_user,
+            id_skr=skrining.id_skr,
+            title="Analisis selesai",
+            message=f"Hasil analisis rekaman: {result.prediction}.",
+            type="screening_result",
+        )
+    )
+    db.commit()
+    db.refresh(skrining)
+
+    return AnalyzeScreeningResponse(
+        message="Analisis selesai",
+        data=_screening_response(skrining),
+    )
 
 
 @router.delete("/api/screenings/{screening_id}")
@@ -108,6 +214,9 @@ def list_history(
                 id_record=item.id_record,
                 tanggal=item.tanggal,
                 created_at=item.created_at,
+                audio_url=_audio_url(
+                    db.query(Record).filter(Record.id_suara == item.id_record).first()
+                ),
                 screening=_screening_response(item.skrining) if item.skrining else None,
             )
             for item in histories
@@ -132,6 +241,9 @@ def get_history(history_id: str, db: Session = Depends(get_db)):
             id_record=history.id_record,
             tanggal=history.tanggal,
             created_at=history.created_at,
+            audio_url=_audio_url(
+                db.query(Record).filter(Record.id_suara == history.id_record).first()
+            ),
             screening=_screening_response(history.skrining) if history.skrining else None,
         )
     }

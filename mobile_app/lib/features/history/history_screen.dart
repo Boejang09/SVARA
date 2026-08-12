@@ -1,8 +1,11 @@
+import 'dart:io';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:svara_app/services/api_service.dart';
 import 'package:svara_app/core/router/app_routes.dart';
 import 'package:svara_app/core/theme/app_theme.dart';
+import 'package:svara_app/services/api_service.dart';
 import 'package:svara_app/widgets/skeleton/skeleton.dart';
 import 'package:svara_app/widgets/svara_logo.dart';
 
@@ -25,6 +28,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<void> _loadData() async {
     final data = await ApiService.getHistory();
+
     if (mounted) {
       setState(() {
         _histories = data ?? [];
@@ -39,7 +43,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       backgroundColor: AppTheme.bgMint,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const SvaraWordmark(markSize: 32, fontSize: 20),
+        title: const SvaraWordmark(
+          markSize: 32,
+          fontSize: 20,
+        ),
         actions: [
           IconButton(
             icon: const Icon(
@@ -47,7 +54,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
               color: AppTheme.primaryDarkTeal,
             ),
             onPressed: () {
-              Navigator.of(context).pushNamed(AppRoutes.notifications);
+              Navigator.of(context).pushNamed(
+                AppRoutes.notifications,
+              );
             },
           ),
         ],
@@ -81,14 +90,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                       ),
                     ),
+
                     const SizedBox(height: 16),
+
                     if (_histories.isEmpty)
                       const Center(
                         child: Padding(
                           padding: EdgeInsets.only(top: 40),
                           child: Text(
                             'Belum ada riwayat skrining.',
-                            style: TextStyle(color: AppTheme.textMuted),
+                            style: TextStyle(
+                              color: AppTheme.textMuted,
+                            ),
                           ),
                         ),
                       )
@@ -97,12 +110,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         children: _histories
                             .map(
                               (record) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: _HistoryRecordCard(record: record),
+                                padding: const EdgeInsets.only(
+                                  bottom: 12,
+                                ),
+                                child: _HistoryRecordCard(
+                                  record: record,
+                                ),
                               ),
                             )
                             .toList(),
                       ),
+
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -112,30 +130,190 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 }
 
-class _HistoryRecordCard extends StatelessWidget {
+class _HistoryRecordCard extends StatefulWidget {
   final Map<String, dynamic> record;
 
-  const _HistoryRecordCard({required this.record});
+  const _HistoryRecordCard({
+    required this.record,
+  });
+
+  @override
+  State<_HistoryRecordCard> createState() =>
+      _HistoryRecordCardState();
+}
+
+class _HistoryRecordCardState
+    extends State<_HistoryRecordCard> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  PlayerState _playerState = PlayerState.stopped;
+
+  bool _isPreparingAudio = false;
+
+  String? _audioError;
+
+  String? _localAudioPath;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _audioPlayer.onPlayerStateChanged.listen((state) {
+      if (mounted) {
+        setState(() {
+          _playerState = state;
+        });
+      }
+    });
+
+    _audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) {
+        setState(() {
+          _playerState = PlayerState.stopped;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+
+    final localPath = _localAudioPath;
+
+    if (localPath != null) {
+      File(localPath).delete().catchError(
+        (_) => File(localPath),
+      );
+    }
+
+    super.dispose();
+  }
+
+  Future<void> _toggleAudio(String audioUrl) async {
+    if (audioUrl.isEmpty) {
+      setState(() {
+        _audioError = 'Audio tidak tersedia.';
+      });
+      return;
+    }
+
+    try {
+      setState(() {
+        _isPreparingAudio = true;
+        _audioError = null;
+      });
+
+      if (_playerState == PlayerState.playing) {
+        await _audioPlayer.pause();
+      } else if (_playerState == PlayerState.paused) {
+        await _audioPlayer.resume();
+      } else {
+        await _audioPlayer.stop();
+
+        /*
+         * Jangan memutar WAV HTTP secara langsung menggunakan
+         * UrlSource pada Android.
+         *
+         * Audio terlebih dahulu di-download ke temporary file,
+         * kemudian diputar menggunakan DeviceFileSource.
+         */
+        _localAudioPath ??=
+            await ApiService.downloadAudioToTempFile(
+          audioUrl,
+        );
+
+        if (_localAudioPath == null) {
+          throw Exception(
+            'Audio gagal diunduh dari server.',
+          );
+        }
+
+        await _audioPlayer.play(
+          DeviceFileSource(_localAudioPath!),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _audioError = 'Gagal memutar audio.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPreparingAudio = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _stopAudio() async {
+    await _audioPlayer.stop();
+
+    if (mounted) {
+      setState(() {
+        _playerState = PlayerState.stopped;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final screening = record['screening'] as Map<String, dynamic>?;
-    final rawRiskLevel = screening?['risk_analysis'];
-    final riskLevel = rawRiskLevel is num ? rawRiskLevel.toDouble() : null;
-    final isLowRisk = riskLevel != null && riskLevel > 80;
-    final heartStatus = screening?['heart_status'] ?? 'Belum tersedia';
-    final title = 'Pemeriksaan Vitalitas';
+    final record = widget.record;
+
+    final screening =
+        record['screening'] as Map<String, dynamic>?;
+
+    final status =
+        (screening?['status'] as String?) ??
+        'uploaded';
+
+    final rawRiskLevel =
+        screening?['risk_analysis'];
+
+    final riskLevel =
+        rawRiskLevel is num
+            ? rawRiskLevel.toDouble()
+            : null;
+
+    final isLowRisk =
+        riskLevel != null && riskLevel > 80;
+
+    final heartStatus =
+        screening?['heart_status'] ??
+        screening?['nama_penyakit'] ??
+        'Belum tersedia';
+
+    final audioUrl = ApiService.resolveUrl(
+      record['audio_url'] as String?,
+    );
+
+    final hasAudio = audioUrl.isNotEmpty;
 
     String formattedDate = '';
+
     try {
-      final dt = DateTime.parse(record['created_at']);
-      formattedDate = DateFormat('dd MMM yyyy • HH:mm').format(dt);
+      final dt = DateTime.parse(
+        record['created_at'],
+      );
+
+      formattedDate =
+          DateFormat('dd MMM yyyy, HH:mm').format(dt);
     } catch (_) {}
 
-    final riskColor = isLowRisk ? AppTheme.primaryTeal : AppTheme.statusWarning;
-    final riskText = riskLevel == null
-        ? 'Menunggu Analisis'
-        : (isLowRisk ? 'Risiko Rendah' : 'Perlu Perhatian');
+    final riskColor = status == 'completed'
+        ? AppTheme.primaryTeal
+        : (status == 'failed'
+              ? Colors.redAccent
+              : AppTheme.statusWarning);
+
+    final riskText = _statusLabel(
+      status,
+      riskLevel,
+      isLowRisk,
+    );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -144,7 +322,8 @@ class _HistoryRecordCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -158,21 +337,26 @@ class _HistoryRecordCard extends StatelessWidget {
                   ),
                 ),
               ),
+
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: riskColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
+                  color:
+                      riskColor.withValues(alpha: 0.12),
+                  borderRadius:
+                      BorderRadius.circular(14),
                 ),
                 child: Text(
                   riskText,
                   style: TextStyle(
-                    color: isLowRisk
+                    color: status == 'completed'
                         ? AppTheme.primaryDarkTeal
-                        : Colors.orange.shade900,
+                        : (status == 'failed'
+                              ? Colors.redAccent
+                              : Colors.orange.shade900),
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -180,52 +364,165 @@ class _HistoryRecordCard extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: 8),
+
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
+              const Expanded(
                 child: Text(
-                  title,
-                  style: const TextStyle(
+                  'Pemeriksaan Vitalitas',
+                  style: TextStyle(
                     color: AppTheme.textDark,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
+
+              if (hasAudio)
+                IconButton(
+                  tooltip:
+                      _playerState ==
+                              PlayerState.playing
+                          ? 'Jeda'
+                          : 'Putar',
+                  onPressed: _isPreparingAudio
+                      ? null
+                      : () =>
+                            _toggleAudio(audioUrl),
+                  icon: _isPreparingAudio
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child:
+                              CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Icon(
+                          _playerState ==
+                                  PlayerState.playing
+                              ? Icons
+                                  .pause_circle_filled_rounded
+                              : Icons
+                                  .play_circle_fill_rounded,
+                          color:
+                              AppTheme.primaryTeal,
+                          size: 32,
+                        ),
+                ),
+
+              if (_playerState ==
+                      PlayerState.playing ||
+                  _playerState ==
+                      PlayerState.paused)
+                IconButton(
+                  tooltip: 'Stop',
+                  onPressed: _stopAudio,
+                  icon: const Icon(
+                    Icons.stop_circle_rounded,
+                    color: AppTheme.textMuted,
+                    size: 28,
+                  ),
+                ),
             ],
           ),
+
           const SizedBox(height: 14),
+
           Row(
             children: [
               Expanded(
                 child: _MetricMini(
-                  icon: Icons.favorite_border_rounded,
+                  icon:
+                      Icons.favorite_border_rounded,
                   label: 'Jantung',
                   value: heartStatus,
                 ),
               ),
+
               const SizedBox(width: 10),
+
               Expanded(
                 child: _MetricMini(
                   icon: Icons.air_rounded,
                   label: 'Status',
-                  value: riskLevel == null
-                      ? 'Diunggah'
-                      : (isLowRisk ? 'Optimal' : 'Perlu Perhatian'),
+                  value: _secondaryStatus(
+                    status,
+                    riskLevel,
+                    isLowRisk,
+                  ),
                 ),
               ),
             ],
           ),
+
           const SizedBox(height: 12),
+
           Text(
             'ID: ${record['id_skr'] ?? '-'}',
-            style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+            style: const TextStyle(
+              color: AppTheme.textMuted,
+              fontSize: 12,
+            ),
           ),
+
+          if (_audioError != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _audioError!,
+              style: const TextStyle(
+                color: Colors.redAccent,
+                fontSize: 12,
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  String _statusLabel(
+    String status,
+    double? riskLevel,
+    bool isLowRisk,
+  ) {
+    return switch (status) {
+      'completed' =>
+        riskLevel == null
+            ? 'Selesai'
+            : (isLowRisk
+                  ? 'Risiko Rendah'
+                  : 'Perlu Perhatian'),
+
+      'processing' => 'Sedang Dianalisis',
+
+      'failed' => 'Analisis Gagal',
+
+      _ => 'Menunggu Analisis',
+    };
+  }
+
+  String _secondaryStatus(
+    String status,
+    double? riskLevel,
+    bool isLowRisk,
+  ) {
+    return switch (status) {
+      'completed' =>
+        riskLevel == null
+            ? 'Selesai'
+            : (isLowRisk
+                  ? 'Optimal'
+                  : 'Perlu Perhatian'),
+
+      'processing' => 'Sedang Dianalisis',
+
+      'failed' => 'Gagal',
+
+      _ => 'Diunggah',
+    };
   }
 }
 
@@ -249,11 +546,16 @@ class _MetricMini extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: AppTheme.primaryDarkTeal, size: 16),
+              Icon(
+                icon,
+                color: AppTheme.primaryDarkTeal,
+                size: 16,
+              ),
               const SizedBox(width: 5),
               Text(
                 label,
@@ -265,7 +567,9 @@ class _MetricMini extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: 6),
+
           Text(
             value,
             maxLines: 1,
