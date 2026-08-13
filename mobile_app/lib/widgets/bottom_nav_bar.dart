@@ -36,35 +36,94 @@ class SvaraBottomNavBar extends StatelessWidget {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                ),
                 child: Row(
                   children: [
+                    // ======================================================
+                    // BERANDA
+                    // ======================================================
+
                     Expanded(
-                      child: _buildNavItem(0, Icons.home_rounded, 'Beranda'),
+                      child: _buildNavItem(
+                        0,
+                        Icons.home_rounded,
+                        'Beranda',
+                      ),
                     ),
+
+                    // ======================================================
+                    // RIWAYAT
+                    // ======================================================
+
                     Expanded(
-                      child: _buildNavItem(1, Icons.history_rounded, 'Riwayat'),
+                      child: _buildNavItem(
+                        1,
+                        Icons.history_rounded,
+                        'Riwayat',
+                      ),
                     ),
+
+                    // ======================================================
+                    // RUANG UNTUK TOMBOL PINDAI
+                    // ======================================================
+
                     const SizedBox(width: 86),
+
+                    // ======================================================
+                    // BERITA
+                    // ======================================================
+
                     Expanded(
-                      child: _buildNavItem(3, Icons.stars_rounded, 'Saran'),
+                      child: _buildNavItem(
+                        3,
+                        Icons.article_rounded,
+                        'Berita',
+                      ),
                     ),
+
+                    // ======================================================
+                    // PROFIL
+                    // ======================================================
+
                     Expanded(
-                      child: _buildNavItem(4, Icons.person_rounded, 'Profil'),
+                      child: _buildNavItem(
+                        4,
+                        Icons.person_rounded,
+                        'Profil',
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            Positioned(top: -18, child: _buildCenterScanButton()),
+
+            // ==============================================================
+            // TOMBOL PINDAI
+            // ==============================================================
+
+            Positioned(
+              top: -18,
+              child: _buildCenterScanButton(),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label) {
+  // =========================================================================
+  // NAVIGATION ITEM
+  // =========================================================================
+
+  Widget _buildNavItem(
+    int index,
+    IconData icon,
+    String label,
+  ) {
     final isSelected = currentIndex == index;
+
     final color = isSelected
         ? const Color(0xFF007F73)
         : const Color(0xFF64748B);
@@ -78,8 +137,14 @@ class SvaraBottomNavBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 25),
+            Icon(
+              icon,
+              color: color,
+              size: 25,
+            ),
+
             const SizedBox(height: 4),
+
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
@@ -88,7 +153,9 @@ class SvaraBottomNavBar extends StatelessWidget {
                 style: TextStyle(
                   color: color,
                   fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  fontWeight: isSelected
+                      ? FontWeight.w800
+                      : FontWeight.w600,
                 ),
               ),
             ),
@@ -97,6 +164,10 @@ class SvaraBottomNavBar extends StatelessWidget {
       ),
     );
   }
+
+  // =========================================================================
+  // CENTER SCAN BUTTON
+  // =========================================================================
 
   Widget _buildCenterScanButton() {
     final isSelected = currentIndex == 2;
@@ -120,10 +191,15 @@ class SvaraBottomNavBar extends StatelessWidget {
                       ? const Color(0xFF007F73)
                       : const Color(0xFF00BFA5),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 5),
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 5,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF00BFA5).withValues(alpha: 0.32),
+                      color: const Color(0xFF00BFA5).withValues(
+                        alpha: 0.32,
+                      ),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -135,7 +211,9 @@ class SvaraBottomNavBar extends StatelessWidget {
                   size: 36,
                 ),
               ),
+
               const SizedBox(height: 2),
+
               const Text(
                 'Pindai',
                 maxLines: 1,
