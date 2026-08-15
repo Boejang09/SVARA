@@ -7,18 +7,18 @@ void main() {
     await tester.pumpWidget(
       const SvaraApp(
         initialRoute: AppRoutes.onboarding,
+        testMode: true,
       ),
     );
 
     // Pastikan aplikasi berhasil dibuat.
     expect(find.byType(SvaraApp), findsOneWidget);
 
-    // Biarkan splash menyelesaikan timer 1,8 detik.
+    // Beri waktu untuk fallback splash test.
     await tester.pump(
-      const Duration(milliseconds: 1800),
+      const Duration(milliseconds: 500),
     );
 
-    // Jalankan satu frame setelah navigasi.
     await tester.pump();
   });
 }

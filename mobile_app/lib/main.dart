@@ -21,11 +21,20 @@ Future<void> main() async {
 }
 
 class SvaraApp extends StatelessWidget {
+  static const _splashRoute = '/splash';
+
   final String initialRoute;
+
+  /// Mode khusus untuk widget test.
+  ///
+  /// false = aplikasi normal, video splash aktif.
+  /// true  = widget test, video splash tidak dijalankan.
+  final bool testMode;
 
   const SvaraApp({
     super.key,
     required this.initialRoute,
+    this.testMode = false,
   });
 
   @override
@@ -34,11 +43,14 @@ class SvaraApp extends StatelessWidget {
       title: 'SVARA',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-
-      home: SplashScreen(
-        nextRoute: initialRoute,
-      ),
-
+      initialRoute: _splashRoute,
+      onGenerateInitialRoutes: (_) => [
+        MaterialPageRoute<void>(
+          settings: const RouteSettings(name: _splashRoute),
+          builder: (_) =>
+              SplashScreen(nextRoute: initialRoute, enableVideo: !testMode),
+        ),
+      ],
       onGenerateRoute: AppRouter.onGenerateRoute,
     );
   }
