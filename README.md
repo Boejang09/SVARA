@@ -1,6 +1,6 @@
 # SVARA
 
-**SVARA (Smart Voice Analysis for Recognition & Assessment)** adalah aplikasi mobile untuk skrining awal suara jantung yang mengintegrasikan Flutter, FastAPI, PostgreSQL, dan Machine Learning berbasis PyTorch.
+**SVARA (Smart Voice for Cardiac Risk Assessment)** adalah aplikasi mobile untuk skrining awal suara jantung yang mengintegrasikan Flutter, FastAPI, PostgreSQL, dan Machine Learning berbasis PyTorch.
 
 > **Disclaimer:** SVARA adalah alat bantu skrining awal. Hasil sistem bukan diagnosis medis definitif dan tidak menggantikan pemeriksaan atau keputusan tenaga kesehatan profesional.
 
