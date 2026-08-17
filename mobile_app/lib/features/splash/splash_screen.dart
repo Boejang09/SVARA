@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:svara_app/core/theme/app_theme.dart';
 import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   bool _isInitialized = false;
   bool _hasNavigated = false;
+  bool _isFinishing = false;
 
   @override
   void initState() {
@@ -90,20 +92,41 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (controller == null ||
         _hasNavigated ||
+        _isFinishing ||
         !controller.value.isInitialized) {
       return;
     }
 
     final value = controller.value;
+
     final hasFinished =
         value.duration > Duration.zero &&
         value.position >= value.duration &&
         !value.isPlaying;
 
     if (hasFinished) {
-      debugPrint('SVARA SPLASH: VIDEO FINISHED');
-      _goToNextRoute();
+      _finishVideo();
     }
+  }
+
+  Future<void> _finishVideo() async {
+    if (!mounted || _hasNavigated || _isFinishing) {
+      return;
+    }
+
+    _isFinishing = true;
+
+    debugPrint('SVARA SPLASH: VIDEO FINISHED');
+
+    await Future.delayed(
+      const Duration(milliseconds: 500),
+    );
+
+    if (!mounted || _hasNavigated) {
+      return;
+    }
+
+    _goToNextRoute();
   }
 
   void _startFallbackTimer(Duration duration) {
@@ -112,14 +135,19 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     _fallbackTimer?.cancel();
-    _fallbackTimer = Timer(duration + const Duration(milliseconds: 300), () {
-      if (!mounted || _hasNavigated) {
-        return;
-      }
 
-      debugPrint('SVARA SPLASH: FALLBACK FINISH');
-      _goToNextRoute();
-    });
+    _fallbackTimer = Timer(
+      duration + const Duration(milliseconds: 300),
+      () {
+        if (!mounted || _hasNavigated || _isFinishing) {
+          return;
+        }
+
+        debugPrint('SVARA SPLASH: FALLBACK FINISH');
+
+        _finishVideo();
+      },
+    );
   }
 
   void _goToNextRoute() {
@@ -128,10 +156,12 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     _hasNavigated = true;
+
     _fallbackTimer?.cancel();
     _fallbackTimer = null;
 
     final controller = _videoController;
+
     controller?.removeListener(_handleVideoUpdate);
     controller?.pause();
 
@@ -142,24 +172,22 @@ class _SplashScreenState extends State<SplashScreen> {
 
     _restoreSystemUI();
 
-    Navigator.of(context).pushReplacementNamed(widget.nextRoute);
+    Navigator.of(context).pushReplacementNamed(
+      widget.nextRoute,
+    );
   }
 
-  // ================================================================
-  // FULLSCREEN
-  // ================================================================
-
   void _enterFullscreen() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+    );
   }
 
   void _restoreSystemUI() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+    );
   }
-
-  // ================================================================
-  // DISPOSE
-  // ================================================================
 
   @override
   void dispose() {
@@ -179,14 +207,10 @@ class _SplashScreenState extends State<SplashScreen> {
     super.dispose();
   }
 
-  // ================================================================
-  // UI
-  // ================================================================
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppTheme.bgMint,
       body: SizedBox.expand(
         child: widget.enableVideo
             ? _buildVideoSplash()
@@ -199,13 +223,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final controller = _videoController;
 
     if (!_isInitialized || controller == null) {
-      return const Center(
-        child: SizedBox(
-          width: 28,
-          height: 28,
-          child: CircularProgressIndicator(strokeWidth: 3, color: Colors.white),
-        ),
-      );
+      return const SizedBox.expand();
     }
 
     return LayoutBuilder(

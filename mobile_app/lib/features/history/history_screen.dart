@@ -43,10 +43,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       backgroundColor: AppTheme.bgMint,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const SvaraWordmark(
-          markSize: 32,
-          fontSize: 20,
-        ),
+        title: const SvaraWordmark(markSize: 32, fontSize: 20),
         actions: [
           IconButton(
             icon: const Icon(
@@ -54,9 +51,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               color: AppTheme.primaryDarkTeal,
             ),
             onPressed: () {
-              Navigator.of(context).pushNamed(
-                AppRoutes.notifications,
-              );
+              Navigator.of(context).pushNamed(AppRoutes.notifications);
             },
           ),
         ],
@@ -99,9 +94,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           padding: EdgeInsets.only(top: 40),
                           child: Text(
                             'Belum ada riwayat skrining.',
-                            style: TextStyle(
-                              color: AppTheme.textMuted,
-                            ),
+                            style: TextStyle(color: AppTheme.textMuted),
                           ),
                         ),
                       )
@@ -110,12 +103,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         children: _histories
                             .map(
                               (record) => Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: 12,
-                                ),
-                                child: _HistoryRecordCard(
-                                  record: record,
-                                ),
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _HistoryRecordCard(record: record),
                               ),
                             )
                             .toList(),
@@ -133,17 +122,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
 class _HistoryRecordCard extends StatefulWidget {
   final Map<String, dynamic> record;
 
-  const _HistoryRecordCard({
-    required this.record,
-  });
+  const _HistoryRecordCard({required this.record});
 
   @override
-  State<_HistoryRecordCard> createState() =>
-      _HistoryRecordCardState();
+  State<_HistoryRecordCard> createState() => _HistoryRecordCardState();
 }
 
-class _HistoryRecordCardState
-    extends State<_HistoryRecordCard> {
+class _HistoryRecordCardState extends State<_HistoryRecordCard> {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   PlayerState _playerState = PlayerState.stopped;
@@ -183,9 +168,7 @@ class _HistoryRecordCardState
     final localPath = _localAudioPath;
 
     if (localPath != null) {
-      File(localPath).delete().catchError(
-        (_) => File(localPath),
-      );
+      File(localPath).delete().catchError((_) => File(localPath));
     }
 
     super.dispose();
@@ -219,20 +202,13 @@ class _HistoryRecordCardState
          * Audio terlebih dahulu di-download ke temporary file,
          * kemudian diputar menggunakan DeviceFileSource.
          */
-        _localAudioPath ??=
-            await ApiService.downloadAudioToTempFile(
-          audioUrl,
-        );
+        _localAudioPath ??= await ApiService.downloadAudioToTempFile(audioUrl);
 
         if (_localAudioPath == null) {
-          throw Exception(
-            'Audio gagal diunduh dari server.',
-          );
+          throw Exception('Audio gagal diunduh dari server.');
         }
 
-        await _audioPlayer.play(
-          DeviceFileSource(_localAudioPath!),
-        );
+        await _audioPlayer.play(DeviceFileSource(_localAudioPath!));
       }
     } catch (_) {
       if (mounted) {
@@ -263,57 +239,48 @@ class _HistoryRecordCardState
   Widget build(BuildContext context) {
     final record = widget.record;
 
-    final screening =
-        record['screening'] as Map<String, dynamic>?;
+    final screening = record['screening'] as Map<String, dynamic>?;
 
-    final status =
-        (screening?['status'] as String?) ??
-        'uploaded';
+    final status = ((screening?['status'] as String?) ?? 'uploaded')
+        .toLowerCase();
 
-    final rawRiskLevel =
-        screening?['risk_analysis'];
+    final rawRiskLevel = screening?['risk_analysis'];
 
-    final riskLevel =
-        rawRiskLevel is num
-            ? rawRiskLevel.toDouble()
-            : null;
+    final riskLevel = rawRiskLevel is num ? rawRiskLevel.toDouble() : null;
 
-    final isLowRisk =
-        riskLevel != null && riskLevel > 80;
+    final isLowRisk = riskLevel != null && riskLevel > 80;
 
-    final heartStatus =
-        screening?['heart_status'] ??
-        screening?['nama_penyakit'] ??
-        'Belum tersedia';
+    final rawHeartStatus =
+        (screening?['heart_status'] ??
+                screening?['nama_penyakit'] ??
+                'Belum tersedia')
+            .toString();
 
-    final audioUrl = ApiService.resolveUrl(
-      record['audio_url'] as String?,
-    );
+    final heartStatus = status == 'retry'
+        ? 'Rekaman tidak jelas'
+        : rawHeartStatus;
+
+    final audioUrl = ApiService.resolveUrl(record['audio_url'] as String?);
 
     final hasAudio = audioUrl.isNotEmpty;
 
     String formattedDate = '';
 
-    try {
-      final dt = DateTime.parse(
-        record['created_at'],
-      );
+    final dt = ApiService.parseServerDateTime(record['created_at']);
 
-      formattedDate =
-          DateFormat('dd MMM yyyy, HH:mm').format(dt);
-    } catch (_) {}
+    if (dt != null) {
+      formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(dt);
+    }
 
     final riskColor = status == 'completed'
         ? AppTheme.primaryTeal
-        : (status == 'failed'
-              ? Colors.redAccent
-              : AppTheme.statusWarning);
+        : status == 'retry'
+        ? Colors.orangeAccent
+        : status == 'failed'
+        ? Colors.redAccent
+        : AppTheme.statusWarning;
 
-    final riskText = _statusLabel(
-      status,
-      riskLevel,
-      isLowRisk,
-    );
+    final riskText = _statusLabel(status, riskLevel, isLowRisk);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -322,8 +289,7 @@ class _HistoryRecordCardState
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -344,10 +310,8 @@ class _HistoryRecordCardState
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color:
-                      riskColor.withValues(alpha: 0.12),
-                  borderRadius:
-                      BorderRadius.circular(14),
+                  color: riskColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
                   riskText,
@@ -382,41 +346,29 @@ class _HistoryRecordCardState
 
               if (hasAudio)
                 IconButton(
-                  tooltip:
-                      _playerState ==
-                              PlayerState.playing
-                          ? 'Jeda'
-                          : 'Putar',
+                  tooltip: _playerState == PlayerState.playing
+                      ? 'Jeda'
+                      : 'Putar',
                   onPressed: _isPreparingAudio
                       ? null
-                      : () =>
-                            _toggleAudio(audioUrl),
+                      : () => _toggleAudio(audioUrl),
                   icon: _isPreparingAudio
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child:
-                              CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : Icon(
-                          _playerState ==
-                                  PlayerState.playing
-                              ? Icons
-                                  .pause_circle_filled_rounded
-                              : Icons
-                                  .play_circle_fill_rounded,
-                          color:
-                              AppTheme.primaryTeal,
+                          _playerState == PlayerState.playing
+                              ? Icons.pause_circle_filled_rounded
+                              : Icons.play_circle_fill_rounded,
+                          color: AppTheme.primaryTeal,
                           size: 32,
                         ),
                 ),
 
-              if (_playerState ==
-                      PlayerState.playing ||
-                  _playerState ==
-                      PlayerState.paused)
+              if (_playerState == PlayerState.playing ||
+                  _playerState == PlayerState.paused)
                 IconButton(
                   tooltip: 'Stop',
                   onPressed: _stopAudio,
@@ -435,8 +387,7 @@ class _HistoryRecordCardState
             children: [
               Expanded(
                 child: _MetricMini(
-                  icon:
-                      Icons.favorite_border_rounded,
+                  icon: Icons.favorite_border_rounded,
                   label: 'Jantung',
                   value: heartStatus,
                 ),
@@ -448,34 +399,17 @@ class _HistoryRecordCardState
                 child: _MetricMini(
                   icon: Icons.air_rounded,
                   label: 'Status',
-                  value: _secondaryStatus(
-                    status,
-                    riskLevel,
-                    isLowRisk,
-                  ),
+                  value: _secondaryStatus(status, riskLevel, isLowRisk),
                 ),
               ),
             ],
-          ),
-
-          const SizedBox(height: 12),
-
-          Text(
-            'ID: ${record['id_skr'] ?? '-'}',
-            style: const TextStyle(
-              color: AppTheme.textMuted,
-              fontSize: 12,
-            ),
           ),
 
           if (_audioError != null) ...[
             const SizedBox(height: 8),
             Text(
               _audioError!,
-              style: const TextStyle(
-                color: Colors.redAccent,
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Colors.redAccent, fontSize: 12),
             ),
           ],
         ],
@@ -483,20 +417,16 @@ class _HistoryRecordCardState
     );
   }
 
-  String _statusLabel(
-    String status,
-    double? riskLevel,
-    bool isLowRisk,
-  ) {
+  String _statusLabel(String status, double? riskLevel, bool isLowRisk) {
     return switch (status) {
       'completed' =>
         riskLevel == null
             ? 'Selesai'
-            : (isLowRisk
-                  ? 'Risiko Rendah'
-                  : 'Perlu Perhatian'),
+            : (isLowRisk ? 'Risiko Rendah' : 'Perlu Perhatian'),
 
       'processing' => 'Sedang Dianalisis',
+
+      'retry' => 'Rekam Ulang',
 
       'failed' => 'Analisis Gagal',
 
@@ -504,20 +434,16 @@ class _HistoryRecordCardState
     };
   }
 
-  String _secondaryStatus(
-    String status,
-    double? riskLevel,
-    bool isLowRisk,
-  ) {
+  String _secondaryStatus(String status, double? riskLevel, bool isLowRisk) {
     return switch (status) {
       'completed' =>
         riskLevel == null
             ? 'Selesai'
-            : (isLowRisk
-                  ? 'Optimal'
-                  : 'Perlu Perhatian'),
+            : (isLowRisk ? 'Optimal' : 'Perlu Perhatian'),
 
       'processing' => 'Sedang Dianalisis',
+
+      'retry' => 'Rekam Ulang',
 
       'failed' => 'Gagal',
 
@@ -546,16 +472,11 @@ class _MetricMini extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                color: AppTheme.primaryDarkTeal,
-                size: 16,
-              ),
+              Icon(icon, color: AppTheme.primaryDarkTeal, size: 16),
               const SizedBox(width: 5),
               Text(
                 label,

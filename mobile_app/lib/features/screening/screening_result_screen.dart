@@ -7,18 +7,13 @@ import 'package:svara_app/widgets/svara_logo.dart';
 class ScreeningResultScreen extends StatefulWidget {
   final Map<String, dynamic>? resultData;
 
-  const ScreeningResultScreen({
-    super.key,
-    this.resultData,
-  });
+  const ScreeningResultScreen({super.key, this.resultData});
 
   @override
-  State<ScreeningResultScreen> createState() =>
-      _ScreeningResultScreenState();
+  State<ScreeningResultScreen> createState() => _ScreeningResultScreenState();
 }
 
-class _ScreeningResultScreenState
-    extends State<ScreeningResultScreen> {
+class _ScreeningResultScreenState extends State<ScreeningResultScreen> {
   bool _saved = false;
 
   void _saveResult() {
@@ -47,27 +42,19 @@ class _ScreeningResultScreenState
     // STATUS
     // ================================================================
 
-    final String uploadStatus = _readText(
-      data?['status'],
-    );
+    final String uploadStatus = _readText(data?['status']).toLowerCase();
 
-    final String uploadStatusLabel = _statusLabel(
-      uploadStatus,
-    );
+    final String resultType = _readText(
+      (data?['raw_output'] as Map?)?['result_type'],
+    ).toLowerCase();
 
-    // ================================================================
-    // SCREENING ID
-    // ================================================================
-
-    final String screeningId = _readText(
-      data?['screening_id'] ?? data?['id_skr'],
-    );
+    final String uploadStatusLabel = _statusLabel(uploadStatus);
 
     // ================================================================
     // PREDICTION DARI MODEL ML
     // ================================================================
 
-    final String prediction = _readText(
+    String prediction = _readText(
       data?['heart_status'] ?? data?['nama_penyakit'],
     );
 
@@ -75,29 +62,21 @@ class _ScreeningResultScreenState
     // BPM
     // ================================================================
 
-    final rawBpm = hasData
-        ? data['bpm_estimate']
-        : null;
+    final rawBpm = hasData ? data['bpm_estimate'] : null;
 
-    final int? bpm = rawBpm is num
-        ? rawBpm.toInt()
-        : null;
+    final int? bpm = rawBpm is num ? rawBpm.toInt() : null;
 
     // ================================================================
     // REKOMENDASI
     // ================================================================
 
-    final String rekomendasi = _readText(
-      data?['recommendation'],
-    );
+    final String rekomendasi = _readText(data?['recommendation']);
 
     // ================================================================
     // CONFIDENCE MODEL
     // ================================================================
 
-    final rawConfidence = hasData
-        ? data['confidence']
-        : null;
+    final rawConfidence = hasData ? data['confidence'] : null;
 
     final double confidence = rawConfidence is num
         ? rawConfidence.toDouble().clamp(0.0, 1.0)
@@ -107,19 +86,21 @@ class _ScreeningResultScreenState
     // DETAIL SEGMENT
     // ================================================================
 
-    final segments = _segmentDetails(
-      data?['raw_output'],
-    );
+    final segments = _segmentDetails(data?['raw_output']);
 
     // ================================================================
     // STATUS ANALISIS
     // ================================================================
 
-    final bool isCompleted =
-        uploadStatus == 'completed';
+    final bool isCompleted = uploadStatus == 'completed';
 
-    final bool isFailed =
-        uploadStatus == 'failed';
+    final bool isRetry = uploadStatus == 'retry' || resultType == 'retry';
+
+    final bool isFailed = uploadStatus == 'failed';
+
+    if (isRetry) {
+      prediction = 'Rekaman tidak jelas';
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.bgMint,
@@ -127,14 +108,10 @@ class _ScreeningResultScreenState
       // ==============================================================
       // APP BAR
       // ==============================================================
-
       appBar: AppBar(
         automaticallyImplyLeading: false,
 
-        title: const SvaraWordmark(
-          markSize: 32,
-          fontSize: 20,
-        ),
+        title: const SvaraWordmark(markSize: 32, fontSize: 20),
 
         actions: [
           IconButton(
@@ -152,22 +129,18 @@ class _ScreeningResultScreenState
       // ==============================================================
       // BODY
       // ==============================================================
-
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             children: [
               // ========================================================
               // HASIL UTAMA
               // ========================================================
-
               _buildResultIndicator(
                 prediction: prediction,
                 isCompleted: isCompleted,
+                isRetry: isRetry,
                 isFailed: isFailed,
               ),
 
@@ -176,13 +149,14 @@ class _ScreeningResultScreenState
               // ========================================================
               // JUDUL HASIL
               // ========================================================
-
               Text(
                 isCompleted
                     ? 'Analisis Selesai'
-                    : (isFailed
-                        ? 'Analisis Gagal'
-                        : 'Menunggu Analisis'),
+                    : (isRetry
+                          ? 'Rekaman Tidak Jelas'
+                          : isFailed
+                          ? 'Analisis Gagal'
+                          : 'Menunggu Analisis'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 22,
@@ -196,13 +170,15 @@ class _ScreeningResultScreenState
               Text(
                 isCompleted
                     ? 'Berikut hasil analisis rekaman '
-                      'dari model ML eksternal.'
-                    : (isFailed
-                        ? 'Gagal menganalisis rekaman. '
-                          'Silakan coba lagi dari riwayat '
-                          'atau buat rekaman baru.'
-                        : 'Rekaman audio berhasil disimpan. '
-                          'Hasil analisis belum tersedia.'),
+                          'dari model ML eksternal.'
+                    : (isRetry
+                          ? rekomendasi
+                          : isFailed
+                          ? 'Gagal menganalisis rekaman. '
+                                'Silakan coba lagi dari riwayat '
+                                'atau buat rekaman baru.'
+                          : 'Rekaman audio berhasil disimpan. '
+                                'Hasil analisis belum tersedia.'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 13.5,
@@ -216,7 +192,6 @@ class _ScreeningResultScreenState
               // ========================================================
               // STATUS ANALISIS
               // ========================================================
-
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -224,8 +199,7 @@ class _ScreeningResultScreenState
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
@@ -233,8 +207,7 @@ class _ScreeningResultScreenState
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: AppTheme.primaryLightTeal,
-                            borderRadius:
-                                BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           child: const Icon(
                             Icons.settings_suggest_rounded,
@@ -245,13 +218,10 @@ class _ScreeningResultScreenState
                         const SizedBox(width: 14),
 
                         Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              isCompleted
-                                  ? 'Hasil Analisis'
-                                  : 'Status Rekaman',
+                              isCompleted ? 'Hasil Analisis' : 'Status Rekaman',
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: AppTheme.textMuted,
@@ -261,13 +231,13 @@ class _ScreeningResultScreenState
                             Text(
                               isCompleted
                                   ? 'Model ML'
+                                  : isRetry
+                                  ? 'Rekam ulang'
                                   : 'Menunggu Analisis',
                               style: const TextStyle(
                                 fontSize: 15,
-                                fontWeight:
-                                    FontWeight.bold,
-                                color:
-                                    AppTheme.primaryDarkTeal,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryDarkTeal,
                               ),
                             ),
                           ],
@@ -276,17 +246,17 @@ class _ScreeningResultScreenState
                     ),
 
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: isFailed
                             ? Colors.redAccent
+                            : isRetry
+                            ? Colors.orangeAccent
                             : AppTheme.primaryTeal,
-                        borderRadius:
-                            BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: Text(
                         uploadStatusLabel,
@@ -306,15 +276,12 @@ class _ScreeningResultScreenState
               // ========================================================
               // ANALISIS JANTUNG
               // ========================================================
-
               _buildMetricCard(
                 icon: Icons.favorite_rounded,
                 iconColor: Colors.redAccent,
                 title: 'Analisis Jantung',
                 val: prediction,
-                subText: bpm == null
-                    ? 'Belum tersedia.'
-                    : 'Estimasi $bpm BPM',
+                subText: bpm == null ? 'Belum tersedia.' : 'Estimasi $bpm BPM',
                 progress: confidence,
               ),
 
@@ -323,38 +290,31 @@ class _ScreeningResultScreenState
               // ========================================================
               // REKOMENDASI
               // ========================================================
-
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius:
-                      BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Rekomendasi Kesehatan',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight:
-                                FontWeight.bold,
-                            color:
-                                AppTheme.textDark,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textDark,
                           ),
                         ),
                         Icon(
                           Icons.thumb_up_alt_outlined,
                           size: 18,
-                          color:
-                              AppTheme.primaryTeal,
+                          color: AppTheme.primaryTeal,
                         ),
                       ],
                     ),
@@ -364,15 +324,12 @@ class _ScreeningResultScreenState
                     _buildRecommendationItem(
                       title: isCompleted
                           ? 'Hasil Model'
+                          : isRetry
+                          ? 'Status Rekaman'
                           : 'Status Skrining',
                       desc: isCompleted
                           ? 'Hasil analisis: $prediction.'
-                          : (screeningId ==
-                                  'Belum tersedia.'
-                              ? rekomendasi
-                              : 'ID skrining: '
-                                '$screeningId. '
-                                '$rekomendasi'),
+                          : rekomendasi,
                     ),
 
                     if (segments.isNotEmpty) ...[
@@ -392,27 +349,20 @@ class _ScreeningResultScreenState
               // ========================================================
               // SIMPAN SEMENTARA
               // ========================================================
-
               SizedBox(
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
                   onPressed: _saveAndGoHome,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        AppTheme.primaryDarkTeal,
+                    backgroundColor: AppTheme.primaryDarkTeal,
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(27),
+                      borderRadius: BorderRadius.circular(27),
                     ),
                   ),
                   child: const Text(
                     'Simpan Sementara',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -422,29 +372,19 @@ class _ScreeningResultScreenState
               // ========================================================
               // HOME + HISTORY
               // ========================================================
-
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        AppRouter
-                            .finishScreeningToHome(
-                          context,
-                        );
+                        AppRouter.finishScreeningToHome(context);
                       },
                       style: OutlinedButton.styleFrom(
-                        backgroundColor:
-                            Colors.grey.shade200,
+                        backgroundColor: Colors.grey.shade200,
                         side: BorderSide.none,
-                        padding:
-                            const EdgeInsets.symmetric(
-                          vertical: 14,
-                        ),
-                        shape:
-                            RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(20),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                       icon: const Icon(
@@ -456,8 +396,7 @@ class _ScreeningResultScreenState
                         'Beranda',
                         style: TextStyle(
                           color: AppTheme.textDark,
-                          fontWeight:
-                              FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -469,17 +408,11 @@ class _ScreeningResultScreenState
                     child: OutlinedButton.icon(
                       onPressed: _saveAndGoHistory,
                       style: OutlinedButton.styleFrom(
-                        backgroundColor:
-                            Colors.grey.shade200,
+                        backgroundColor: Colors.grey.shade200,
                         side: BorderSide.none,
-                        padding:
-                            const EdgeInsets.symmetric(
-                          vertical: 14,
-                        ),
-                        shape:
-                            RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(20),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                       icon: const Icon(
@@ -491,8 +424,7 @@ class _ScreeningResultScreenState
                         'Riwayat',
                         style: TextStyle(
                           color: AppTheme.textDark,
-                          fontWeight:
-                              FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
@@ -515,23 +447,30 @@ class _ScreeningResultScreenState
   Widget _buildResultIndicator({
     required String prediction,
     required bool isCompleted,
+    required bool isRetry,
     required bool isFailed,
   }) {
     final Color indicatorColor = isFailed
         ? Colors.redAccent
+        : isRetry
+        ? Colors.orangeAccent
         : AppTheme.primaryTeal;
 
     final IconData indicatorIcon = isFailed
         ? Icons.error_outline_rounded
+        : isRetry
+        ? Icons.replay_rounded
         : isCompleted
-            ? Icons.favorite_rounded
-            : Icons.hourglass_empty_rounded;
+        ? Icons.favorite_rounded
+        : Icons.hourglass_empty_rounded;
 
     final String displayText = isFailed
         ? 'Gagal'
+        : isRetry
+        ? 'Ulangi'
         : isCompleted
-            ? prediction
-            : 'Menunggu';
+        ? prediction
+        : 'Menunggu';
 
     return SizedBox(
       width: 190,
@@ -542,7 +481,6 @@ class _ScreeningResultScreenState
           // ==============================================================
           // LINGKARAN
           // ==============================================================
-
           Container(
             width: 170,
             height: 170,
@@ -550,16 +488,12 @@ class _ScreeningResultScreenState
               shape: BoxShape.circle,
               color: Colors.white,
               border: Border.all(
-                color: indicatorColor.withValues(
-                  alpha: 0.22,
-                ),
+                color: indicatorColor.withValues(alpha: 0.22),
                 width: 10,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: indicatorColor.withValues(
-                    alpha: 0.10,
-                  ),
+                  color: indicatorColor.withValues(alpha: 0.10),
                   blurRadius: 18,
                   spreadRadius: 2,
                 ),
@@ -570,27 +504,19 @@ class _ScreeningResultScreenState
           // ==============================================================
           // ICON + STATUS
           // ==============================================================
-
           Padding(
             padding: const EdgeInsets.all(28),
             child: Column(
-              mainAxisAlignment:
-                  MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: indicatorColor.withValues(
-                      alpha: 0.10,
-                    ),
+                    color: indicatorColor.withValues(alpha: 0.10),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    indicatorIcon,
-                    color: indicatorColor,
-                    size: 27,
-                  ),
+                  child: Icon(indicatorIcon, color: indicatorColor, size: 27),
                 ),
 
                 const SizedBox(height: 10),
@@ -619,8 +545,7 @@ class _ScreeningResultScreenState
   // =========================================================================
 
   String _readText(Object? value) {
-    if (value is String &&
-        value.trim().isNotEmpty) {
+    if (value is String && value.trim().isNotEmpty) {
       return value.trim();
     }
 
@@ -636,6 +561,7 @@ class _ScreeningResultScreenState
       'uploaded' => 'Diunggah',
       'processing' => 'Sedang diproses',
       'completed' => 'Selesai',
+      'retry' => 'Rekam ulang',
       'failed' => 'Gagal',
       _ => 'Diunggah',
     };
@@ -645,20 +571,14 @@ class _ScreeningResultScreenState
   // SEGMENT DETAILS
   // =========================================================================
 
-  List<String> _segmentDetails(
-    Object? rawOutput,
-  ) {
+  List<String> _segmentDetails(Object? rawOutput) {
     if (rawOutput is Map) {
-      final segments =
-          rawOutput['segment_details'];
+      final segments = rawOutput['segment_details'];
 
       if (segments is List) {
         return segments
             .whereType<String>()
-            .where(
-              (item) =>
-                  item.trim().isNotEmpty,
-            )
+            .where((item) => item.trim().isNotEmpty)
             .toList();
       }
     }
@@ -682,29 +602,20 @@ class _ScreeningResultScreenState
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius:
-            BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                color: iconColor,
-                size: 20,
-              ),
+              Icon(icon, color: iconColor, size: 20),
 
               const SizedBox(width: 8),
 
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.textMuted,
-                ),
+                style: const TextStyle(fontSize: 14, color: AppTheme.textMuted),
               ),
             ],
           ),
@@ -717,14 +628,11 @@ class _ScreeningResultScreenState
                 child: Text(
                   val,
                   maxLines: 1,
-                  overflow:
-                      TextOverflow.ellipsis,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 20,
-                    fontWeight:
-                        FontWeight.bold,
-                    color:
-                        AppTheme.textDark,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textDark,
                   ),
                 ),
               ),
@@ -733,11 +641,7 @@ class _ScreeningResultScreenState
 
               Text(
                 subText,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color:
-                      AppTheme.textMuted,
-                ),
+                style: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
               ),
             ],
           ),
@@ -745,17 +649,12 @@ class _ScreeningResultScreenState
           const SizedBox(height: 10),
 
           ClipRRect(
-            borderRadius:
-                BorderRadius.circular(4),
-            child:
-                LinearProgressIndicator(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor:
-                  Colors.grey.shade100,
-              valueColor:
-                  const AlwaysStoppedAnimation<
-                      Color>(
+              backgroundColor: Colors.grey.shade100,
+              valueColor: const AlwaysStoppedAnimation<Color>(
                 AppTheme.primaryTeal,
               ),
             ),
@@ -777,12 +676,10 @@ class _ScreeningResultScreenState
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.bgMint,
-        borderRadius:
-            BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(
             Icons.check_circle_rounded,
@@ -794,17 +691,14 @@ class _ScreeningResultScreenState
 
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
                   style: const TextStyle(
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color:
-                        AppTheme.textDark,
+                    color: AppTheme.textDark,
                   ),
                 ),
 
@@ -814,8 +708,7 @@ class _ScreeningResultScreenState
                   desc,
                   style: const TextStyle(
                     fontSize: 12.5,
-                    color:
-                        AppTheme.textMuted,
+                    color: AppTheme.textMuted,
                     height: 1.3,
                   ),
                 ),

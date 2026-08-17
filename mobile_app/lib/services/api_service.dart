@@ -525,6 +525,23 @@ class ApiService {
     return '$_baseUrl/$path';
   }
 
+  static DateTime? parseServerDateTime(
+    Object? value,
+  ) {
+    if (value is! String || value.isEmpty) {
+      return null;
+    }
+
+    final hasTimezone = RegExp(
+      r'(Z|[+-]\d{2}:?\d{2})$',
+      caseSensitive: false,
+    ).hasMatch(value);
+
+    final normalized = hasTimezone ? value : '${value}Z';
+
+    return DateTime.tryParse(normalized)?.toLocal();
+  }
+
   /// Download audio dari backend ke temporary storage perangkat.
   ///
   /// Audio tidak langsung diputar dari URL HTTP karena pada Android

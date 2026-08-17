@@ -1,29 +1,75 @@
-"""
-Pydantic schemas untuk request/response validation SVARA API.
-"""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
-# ──────────────────────────────────────────────
-# Auth Schemas
-# ──────────────────────────────────────────────
-class RegisterRequest(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50, description="Username unik untuk login")
-    nama: str = Field(..., min_length=1, max_length=255, description="Nama lengkap pengguna")
-    password: str = Field(..., min_length=6, description="Kata sandi minimal 6 karakter")
-    email: Optional[str] = Field(None, description="Email (opsional)")
-    phone: Optional[str] = Field(None, description="Nomor telepon (opsional)")
+class SvaraBaseModel(BaseModel):
+    @field_serializer(
+        "*",
+        when_used="json",
+        check_fields=False,
+    )
+    def serialize_datetime(self, value):
+        if not isinstance(
+            value,
+            datetime,
+        ):
+            return value
+
+        if value.tzinfo is None:
+            value = value.replace(
+                tzinfo=timezone.utc
+            )
+
+        return (
+            value
+            .astimezone(timezone.utc)
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
 
 
-class LoginRequest(BaseModel):
-    username: str = Field(..., description="Username")
-    password: str = Field(..., description="Kata sandi")
+class RegisterRequest(SvaraBaseModel):
+    username: str = Field(
+        ...,
+        min_length=3,
+        max_length=50,
+        description="Username unik untuk login",
+    )
+    nama: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Nama lengkap pengguna",
+    )
+    password: str = Field(
+        ...,
+        min_length=6,
+        description="Kata sandi minimal 6 karakter",
+    )
+    email: Optional[str] = Field(
+        None,
+        description="Email (opsional)",
+    )
+    phone: Optional[str] = Field(
+        None,
+        description="Nomor telepon (opsional)",
+    )
 
 
-class UserResponse(BaseModel):
+class LoginRequest(SvaraBaseModel):
+    username: str = Field(
+        ...,
+        description="Username",
+    )
+    password: str = Field(
+        ...,
+        description="Password",
+    )
+
+
+class UserResponse(SvaraBaseModel):
     id_user: str
     username: str
     nama: str
@@ -36,16 +82,13 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 
-class TokenResponse(BaseModel):
+class TokenResponse(SvaraBaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
 
 
-# ──────────────────────────────────────────────
-# Predict Schemas
-# ──────────────────────────────────────────────
-class PredictResponse(BaseModel):
+class PredictResponse(SvaraBaseModel):
     id_skr: str
     id_record: Optional[str] = None
     nama_penyakit: str
@@ -61,18 +104,19 @@ class PredictResponse(BaseModel):
     created_at: Optional[datetime] = None
 
 
-class PredictRequest(BaseModel):
-    id_record: str = Field(..., description="ID rekaman audio yang akan dianalisis")
+class PredictRequest(SvaraBaseModel):
+    id_record: str = Field(
+        ...,
+        description="ID rekaman audio yang akan dianalisis",
+    )
 
 
-# ──────────────────────────────────────────────
-# Screening Schemas
-# ──────────────────────────────────────────────
-class ScreeningResponse(BaseModel):
+class ScreeningResponse(SvaraBaseModel):
     id_skr: str
     id_user: Optional[str] = None
     id_record: Optional[str] = None
     status: Optional[str] = None
+    result_type: Optional[str] = None
     nama_penyakit: Optional[str] = None
     risk_analysis: Optional[float] = None
     confidence: Optional[float] = None
@@ -89,7 +133,7 @@ class ScreeningResponse(BaseModel):
         from_attributes = True
 
 
-class HistoryResponse(BaseModel):
+class HistoryResponse(SvaraBaseModel):
     id_history: str
     id_user: Optional[str] = None
     id_skr: str
@@ -97,14 +141,13 @@ class HistoryResponse(BaseModel):
     tanggal: Optional[datetime] = None
     created_at: Optional[datetime] = None
     audio_url: Optional[str] = None
-    # Include screening data when joined
     screening: Optional[ScreeningResponse] = None
 
     class Config:
         from_attributes = True
 
 
-class NotificationResponse(BaseModel):
+class NotificationResponse(SvaraBaseModel):
     id_notification: str
     id_user: Optional[str] = None
     id_skr: Optional[str] = None
@@ -115,25 +158,32 @@ class NotificationResponse(BaseModel):
     created_at: Optional[datetime] = None
     read_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
 
-
-class NotificationCreateRequest(BaseModel):
+class NotificationCreateRequest(SvaraBaseModel):
     id_user: Optional[str] = None
     id_skr: Optional[str] = None
-    title: str = Field(..., min_length=1, max_length=160)
-    message: str = Field(..., min_length=1)
-    type: str = Field(default="info", max_length=40)
+    title: str = Field(
+        ...,
+        min_length=1,
+        max_length=160,
+    )
+    message: str = Field(
+        ...,
+        min_length=1,
+    )
+    type: str = Field(
+        default="info",
+        max_length=40,
+    )
 
 
-class UploadAudioResponse(BaseModel):
+class UploadAudioResponse(SvaraBaseModel):
     message: str
     screening_id: str
     record_id: str
     status: str
 
 
-class AnalyzeScreeningResponse(BaseModel):
+class AnalyzeScreeningResponse(SvaraBaseModel):
     message: str
     data: ScreeningResponse

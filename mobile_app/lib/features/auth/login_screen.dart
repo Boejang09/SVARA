@@ -15,6 +15,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController(text: 'tamu');
   final _passwordController = TextEditingController();
+
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -23,10 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
-  }
-
-  void _loginAsGuest() {
-    AppRouter.toMain(context);
   }
 
   Future<void> _loginWithUsername() async {
@@ -39,11 +36,14 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
+
     final result = await ApiService.login(
       username: username,
       password: password,
     );
+
     if (!mounted) return;
+
     setState(() => _isLoading = false);
 
     if (result.isSuccess) {
@@ -54,13 +54,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showForgotPasswordMessage() {
-    _showMessage('Pemulihan kata sandi belum diaktifkan untuk akun demo.');
+    _showMessage(
+      'Pemulihan kata sandi belum diaktifkan untuk akun demo.',
+    );
   }
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
   }
 
   @override
@@ -70,16 +76,22 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: AppTheme.bgMint,
         body: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 32,
+            ),
             child: Column(
               children: [
                 const SizedBox(height: 20),
+
                 const SvaraLogo(
                   size: 72,
                   showText: true,
                   tagline: 'Presisi Klinis. Kejernihan Jantung.',
                 ),
+
                 const SizedBox(height: 36),
+
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -87,7 +99,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withValues(
+                          alpha: 0.04,
+                        ),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -104,7 +118,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           fontSize: 14,
                         ),
                       ),
+
                       const SizedBox(height: 8),
+
                       TextField(
                         controller: _usernameController,
                         textInputAction: TextInputAction.next,
@@ -116,9 +132,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
+
                       const SizedBox(height: 20),
+
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
                             'Kata Sandi',
@@ -141,7 +160,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 4),
+
                       TextField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
@@ -161,35 +182,44 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscurePassword = !_obscurePassword;
+                                _obscurePassword =
+                                    !_obscurePassword;
                               });
                             },
                           ),
                         ),
                       ),
+
                       const SizedBox(height: 18),
+
                       SizedBox(
                         width: double.infinity,
                         height: 54,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _loginWithUsername,
+                          onPressed:
+                              _isLoading
+                                  ? null
+                                  : _loginWithUsername,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryDarkTeal,
+                            backgroundColor:
+                                AppTheme.primaryDarkTeal,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(27),
+                              borderRadius:
+                                  BorderRadius.circular(27),
                             ),
                           ),
                           child: _isLoading
                               ? const SizedBox(
                                   width: 22,
                                   height: 22,
-                                  child: CircularProgressIndicator(
+                                  child:
+                                      CircularProgressIndicator(
                                     strokeWidth: 2.4,
                                     color: Colors.white,
                                   ),
                                 )
                               : const Text(
-                                  'Masuk dengan Nama Pengguna',
+                                  'Masuk',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -197,70 +227,24 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(child: Divider(color: Colors.grey.shade200)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              'ATAU',
-                              style: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Expanded(child: Divider(color: Colors.grey.shade200)),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: OutlinedButton(
-                          onPressed: _loginAsGuest,
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryTeal,
-                            side: BorderSide.none,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(26),
-                            ),
-                          ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.person_outline_rounded,
-                                color: Colors.white,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Masuk sebagai Tamu',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 28),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
                       'Belum punya akun? ',
-                      style: TextStyle(color: AppTheme.textMuted),
+                      style: TextStyle(
+                        color: AppTheme.textMuted,
+                      ),
                     ),
                     GestureDetector(
-                      onTap: () => AppRouter.toRegister(context),
+                      onTap: () =>
+                          AppRouter.toRegister(context),
                       child: const Text(
                         'Daftar',
                         style: TextStyle(

@@ -10,7 +10,6 @@ class BeforeRecordingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.bgMint,
-
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(
@@ -24,7 +23,6 @@ class BeforeRecordingScreen extends StatelessWidget {
           fontSize: 20,
         ),
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(
@@ -34,10 +32,6 @@ class BeforeRecordingScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ============================================================
-              // HEADER
-              // ============================================================
-
               const Text(
                 'Sebelum Merekam',
                 style: TextStyle(
@@ -61,69 +55,6 @@ class BeforeRecordingScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // ============================================================
-              // TUTORIAL HERO
-              // ============================================================
-
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(22),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryTeal,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 82,
-                      height: 82,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(
-                          alpha: 0.18,
-                        ),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.mic_rounded,
-                        color: Colors.white,
-                        size: 42,
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    const Text(
-                      'Siapkan Rekaman Anda',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 21,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    const Text(
-                      'Pastikan lingkungan dan perangkat '
-                      'siap sebelum memulai perekaman.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // ============================================================
-              // TUTORIAL
-              // ============================================================
-
               const Text(
                 'Panduan Rekaman',
                 style: TextStyle(
@@ -136,7 +67,6 @@ class BeforeRecordingScreen extends StatelessWidget {
               const SizedBox(height: 12),
 
               _buildStepTile(
-                number: '1',
                 icon: Icons.chair_rounded,
                 title: 'Duduk dengan nyaman',
                 desc:
@@ -147,7 +77,6 @@ class BeforeRecordingScreen extends StatelessWidget {
               const SizedBox(height: 10),
 
               _buildStepTile(
-                number: '2',
                 icon: Icons.volume_off_rounded,
                 title: 'Cari tempat yang tenang',
                 desc:
@@ -158,7 +87,6 @@ class BeforeRecordingScreen extends StatelessWidget {
               const SizedBox(height: 10),
 
               _buildStepTile(
-                number: '3',
                 icon: Icons.phone_android_rounded,
                 title: 'Pegang ponsel dengan stabil',
                 desc:
@@ -169,7 +97,6 @@ class BeforeRecordingScreen extends StatelessWidget {
               const SizedBox(height: 10),
 
               _buildStepTile(
-                number: '4',
                 icon: Icons.mic_none_rounded,
                 title: 'Ikuti instruksi perekaman',
                 desc:
@@ -178,10 +105,6 @@ class BeforeRecordingScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 24),
-
-              // ============================================================
-              // START RECORDING BUTTON
-              // ============================================================
 
               SizedBox(
                 width: double.infinity,
@@ -227,12 +150,7 @@ class BeforeRecordingScreen extends StatelessWidget {
     );
   }
 
-  // =========================================================================
-  // TUTORIAL STEP
-  // =========================================================================
-
   Widget _buildStepTile({
-    required String number,
     required IconData icon,
     required String title,
     required String desc,
@@ -246,56 +164,21 @@ class BeforeRecordingScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ================================================================
-          // NUMBER
-          // ================================================================
-
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryLightTeal,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Icon(
-                  icon,
-                  color: AppTheme.primaryTeal,
-                  size: 23,
-                ),
-              ),
-
-              Positioned(
-                right: -4,
-                top: -5,
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.primaryDarkTeal,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    number,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryLightTeal,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(
+              icon,
+              color: AppTheme.primaryTeal,
+              size: 23,
+            ),
           ),
 
           const SizedBox(width: 14),
-
-          // ================================================================
-          // CONTENT
-          // ================================================================
 
           Expanded(
             child: Column(
